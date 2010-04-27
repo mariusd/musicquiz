@@ -18,5 +18,11 @@ class StrippedCharField(forms.CharField):
          return forms.CharField.clean(self, value)
 
 class WelcomeForm(forms.Form):
-    name = StrippedCharField(label="Your name", min_length=2, max_length=20)
-        
+    name = StrippedCharField(label='Your name', min_length=2, max_length=20)
+    
+class AnswerForm(forms.Form):
+    answer = forms.ChoiceField(label='Your guess', widget=forms.RadioSelect)
+
+    def __init__(self, choices):
+        super(AnswerForm, self).__init__()
+        self.fields['answer'].choices = choices    

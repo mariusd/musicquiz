@@ -1,0 +1,35 @@
+{% extends 'quiz/index.html' %}
+
+{% block content %}
+
+
+{% if prev_result %}
+    {% if prev_result.correct %}
+        <p class="success">Congratulations! You have answered correctly!</p>
+    {% else %}
+        <p class="error">Your answer was incorrect.</p>
+    {% endif %}
+{% endif %}
+
+<h2>Question</h2>
+
+<p>{{ name }}, can you guess what song is playing?</p>
+
+<object style="height: 25px; width: 425px">
+    <param name="movie"
+           value="http://www.youtube.com/v/{{song.youtube_code}}&autoplay=1">
+    <param name="allowFullScreen" value="true">
+    <param name="allowScriptAccess" value="always">
+    <embed
+        src="http://www.youtube.com/v/{{song.youtube_code}}&autoplay=1"
+        type="application/x-shockwave-flash"
+        allowfullscreen="true"
+        allowScriptAccess="always"
+        width="425" height="25">
+</object>
+
+<form method="post" action="" onclick="submit()">
+    {{ answer_form }}
+</form>
+
+{% endblock %}
