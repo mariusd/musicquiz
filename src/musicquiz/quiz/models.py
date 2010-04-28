@@ -1,5 +1,30 @@
 from django.db import models
+import gdata.youtube
+import gdata.youtube.service
 import random
+import urlparse
+
+def extract_youtube_code(url):
+    """Extract youtube video code (e.g. EjAoBKagWQA) from url.
+    
+    >>> eyc = extract_youtube_code
+    >>> eyc('http://www.youtube.com/watch?v=qndUS3SIf1Q&feature=related')
+    'qndUS3SIf1Q'
+    >>> eyc('http://youtube.com/v/3Ii8m1jgn_M?f=videos&app=youtube_gdata')
+    '3Ii8m1jgn_M'
+    >>> eyc('http://www.youtube.com/watch?WRONG=qndUS3SIf1Q')
+    Traceback (most recent call last):
+    ...
+    ValueError: cannot extract code (wrong url?)
+    """
+    result = urlparse.urlparse(url, scheme='http')
+    if result.path == '/watch':
+        parse_query = urlparse.parse_qs(result.query)
+        if 'v' in parse_query.keys():
+            return parse_query['v'][0]
+    elif result.path[:3] == '/v/':
+        return result.path[3:]
+    raise ValueError('cannot extract code (wrong url?)')
 
 # Create your models here.
 
@@ -13,8 +38,21 @@ class Song(models.Model):
         pass
         
     def update_youtube_code(self):
-        """Find video for a song and update youtube code field."""
-        pass
+        """Find video for a song and update youtube code field.
+        
+        >>> song = Song(artist='Fathless', title='Insomnia')
+        >>> song.update_youtube_code()
+        >>> song.youtube_code
+        'tBrUjvONIrA'
+        """
+        service = gdata.youtube.service.YouTubeService()
+        query = gdata.youtube.service.YouTubeVideoQuery()
+        query.vq = '%s %s' % (self.artist, self.title)
+        feed = service.YouTubeQuery(query)
+        if len(feed.entry) > 0:
+            url = feed.entry[0].GetSwfUrl()
+            youtube_code = extract_youtube_code(url)
+            self.youtube_code = youtube_code
         
     @staticmethod
     def pick_random(exclude=[]):
@@ -56,7 +94,7 @@ class Song(models.Model):
         answers += [self]
         random.shuffle(answers)
         return answers       
-               
+
     def __unicode__(self):
         """Return a string representation mainly for debugging."""
         return '%s -- %s (%s)' % (self.artist, self.title, self.youtube_code)
