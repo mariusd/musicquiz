@@ -40,7 +40,7 @@ class Song(models.Model):
     def update_youtube_code(self):
         """Find video for a song and update youtube code field.
         
-        >>> song = Song(artist='Fathless', title='Insomnia')
+        >>> song = Song(artist='Faithless', title='Insomnia')
         >>> song.update_youtube_code()
         >>> song.youtube_code
         'tBrUjvONIrA'
