@@ -1,0 +1,14 @@
+----------------------
+Quiz application tests
+----------------------
+
+Simple test, to make sure everything is set up correctly:
+
+    >>> b = Browser()
+    >>> b.open('http://testserver/quiz')
+    >>> print b.contents
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    ...
+        <h1>Music Quiz</h1>
+    ...
