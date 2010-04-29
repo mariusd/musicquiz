@@ -1,6 +1,7 @@
 from django.db import models
 import gdata.youtube
 import gdata.youtube.service
+import pylast
 import random
 import urlparse
 
@@ -33,9 +34,19 @@ class Song(models.Model):
     title = models.CharField(max_length=256)
     youtube_code = models.CharField(max_length=20, null=True, blank=True)
     
-    def get_similar(self):
-        """Get a list of similar songs."""
-        pass
+    def update_similar(self):
+        """Update the list of similar tracks. TODO
+        
+        >>> s = Song(artist='Radiohead', title='House of Cards')
+        >>> len(s.get_similar())
+        10
+        """
+        API_KEY = 'b25b959554ed76058ac220b7b2e0a026'
+        network = pylast.get_lastfm_network(api_key=API_KEY)
+        track = network.get_track(self.artist, self.title)
+        similar = track.get_similar()[:10]
+        return [Song(artist=track.item.artist,
+                     title=track.item.title) for track in similar]
         
     def update_youtube_code(self):
         """Find video for a song and update youtube code field.
