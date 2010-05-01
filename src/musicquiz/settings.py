@@ -2,6 +2,8 @@
 
 import os.path
 
+LASTFM_API_KEY = 'b25b959554ed76058ac220b7b2e0a026'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

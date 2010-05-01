@@ -1,53 +1,113 @@
 from django.db import models
+from django.conf import settings
+from utility import extract_youtube_code
 import gdata.youtube
 import gdata.youtube.service
 import pylast
 import random
-import urlparse
-
-def extract_youtube_code(url):
-    """Extract youtube video code (e.g. EjAoBKagWQA) from url.
-    
-    >>> eyc = extract_youtube_code
-    >>> eyc('http://www.youtube.com/watch?v=qndUS3SIf1Q&feature=related')
-    'qndUS3SIf1Q'
-    >>> eyc('http://youtube.com/v/3Ii8m1jgn_M?f=videos&app=youtube_gdata')
-    '3Ii8m1jgn_M'
-    >>> eyc('http://www.youtube.com/watch?WRONG=qndUS3SIf1Q')
-    Traceback (most recent call last):
-    ...
-    ValueError: cannot extract code (wrong url?)
-    """
-    result = urlparse.urlparse(url, scheme='http')
-    if result.path == '/watch':
-        parse_query = urlparse.parse_qs(result.query)
-        if 'v' in parse_query.keys():
-            return parse_query['v'][0]
-    elif result.path[:3] == '/v/':
-        return result.path[3:]
-    raise ValueError('cannot extract code (wrong url?)')
 
 # Create your models here.
 
 class Song(models.Model):
+    """Song model responsible for fetching data from web and storing it."""
+
     artist = models.CharField(max_length=256)
     title = models.CharField(max_length=256)
     youtube_code = models.CharField(max_length=20, null=True, blank=True)
+    similar = models.ManyToManyField('self', through='SongSimilarity',
+                                     symmetrical=False)
     
-    def fetch_similar(self):
-        """Update the list of similar tracks. TODO
+    def create_similarity(self, similar, match):
+        """Create similarity between songs.
         
-        >>> s = Song(artist='Radiohead', title='House of Cards')
-        >>> len(s.fetch_similar())
-        10
+        Parameter `match` is a float value which tells how
+        similar the two songs are. This method must be used
+        to ensure symmetrical relationship.
+        
+        >>> a = Song.objects.create(artist='A', title='a')
+        >>> b = Song.objects.create(artist='B', title='b')
+        >>> a.similar.all()
+        []
+        >>> b.similar.all()
+        []
+        >>> a.create_similarity(b, 42)
+        >>> a.create_similarity(b, 0)
+        Traceback (most recent call last):
+        ...
+        IntegrityError: columns first_id, second_id are not unique
+        >>> b in a.similar.all()
+        True
+        >>> a in b.similar.all()
+        True
+        >>> b in a.similar.filter(songsimilarity__match=42)
+        True
+        >>> b in a.similar.filter(songsimilarity__match=43)
+        False
+        >>> a.delete()
+        >>> b.similar.all()
+        []
+        >>> b.create_similarity(b, 1)
+        Traceback (most recent call last):
+        ...
+        ValueError: song cannot be similar to itself
         """
-        API_KEY = 'b25b959554ed76058ac220b7b2e0a026'
-        network = pylast.get_lastfm_network(api_key=API_KEY)
-        track = network.get_track(self.artist, self.title)
-        similar = track.get_similar()[:10]
-        return [Song(artist=track.item.artist.name,
-                     title=track.item.title) for track in similar]
+        if self == similar:
+            raise ValueError('song cannot be similar to itself')
+        SongSimilarity.objects.create(first=self, second=similar, match=match)
+        SongSimilarity.objects.create(first=similar, second=self, match=match)
+    
+    def remove_similarity(self, similar):
+        """Remove similarity between songs.
         
+        This method must be used to ensure symmetrical relationship.
+        
+        >>> a = Song.objects.create(artist='A', title='a')
+        >>> b = Song.objects.create(artist='B', title='b')
+        >>> a.create_similarity(b, 1)
+        >>> b in a.similar.all()
+        True
+        >>> b.remove_similarity(a)
+        >>> b in a.similar.all()
+        False
+        >>> b.remove_similarity(a)
+        Traceback (most recent call last):
+        ...
+        ValueError: songs are not similar
+        """
+        if similar not in self.similar.all():
+            raise ValueError('songs are not similar')
+        self.songsimilarity_set.filter(second=similar)[0].delete()
+        similar.songsimilarity_set.filter(second=self)[0].delete()
+    
+    def fetch_similar(self, limit=25):
+        """Fetch a list or similar songs and save them in the database.
+        
+        Returns the count of newly created similar songs.
+
+        >>> a = Song.objects.create(artist='a', title='a')
+        >>> a.fetch_similar(-1)
+        Traceback (most recent call last):
+        ...
+        ValueError: limit must be a positive integer
+        """
+        if limit < 0:
+            raise ValueError('limit must be a positive integer')
+        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
+        track = network.get_track(self.artist, self.title)
+        similar = track.get_similar()
+        new_songs = 0
+        for track in similar[:limit]:
+            name = track.item.artist.name
+            title = track.item.title
+            obj, flag = Song.objects.get_or_create(artist=name, title=title)
+            try:
+                self.create_similarity(obj, track.match)
+            except IntegrityError, e:
+                pass
+            else:
+                new_songs += 1
+        return new_songs
+
     def update_youtube_code(self):
         """Find video for a song and update youtube code field.
         
@@ -109,3 +169,35 @@ class Song(models.Model):
     def __unicode__(self):
         """Return a string representation mainly for debugging."""
         return u'%s -- %s (%s)' % (self.artist, self.title, self.youtube_code)
+        
+
+class SongSimilarity(models.Model):
+    """Intermediate model class to store the similarities of songs."""
+    
+    first = models.ForeignKey(Song)
+    second = models.ForeignKey(Song, related_name='similar_songs')
+    match = models.FloatField(null=True)
+    
+    class Meta:
+        unique_together = (('first', 'second'),)
+    
+    def __unicode__(self):
+        """Return a string representation mainly for debugging."""
+        return u'%s <-> %s (%f)' % (self.first, self.second, self.match)
+        
+
+class Question(models.Model):
+    """Model class for quiz question."""
+    
+    good_choice = models.ForeignKey(Song)
+    other_choices = models.ManyToManyField(Song, related_name='in_answer')
+    
+    times_answered = models.IntegerField()
+    times_answered_correctly = models.IntegerField()
+    
+    def make_guess(self, song):
+        pass
+    
+    def __unicode__(self):
+        """Return a string representation mainly for debugging."""
+        return u'%s' % (self.correct)

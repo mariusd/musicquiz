@@ -1,6 +1,7 @@
 import unittest
 import doctest
 import forms
+import utility
 from django.test import TestCase
 import homophony
 
@@ -15,6 +16,7 @@ def suite():
     suite = unittest.TestSuite([
         SimpleTest('test_basic_addition'),
         doctest.DocTestSuite(forms),
+        doctest.DocTestSuite(utility),
         homophony.DocFileSuite('tests.txt'),
     ])
     return suite
