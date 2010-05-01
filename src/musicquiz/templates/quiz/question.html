@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<script type="text/javascript" src="/static/js/mootools.js"></script>
+<script type="text/javascript" src="/static/js/moocheck.js"></script>
 
 {% if prev_result %}
     {% if prev_result.correct %}
@@ -28,8 +30,16 @@
         width="425" height="25">
 </object>
 
-<form method="post" action="" onclick="submit()">
-    {{ answer_form }}
-</form>
+<div id="answers">
+    <form method="post" action="">
+    {% for id, title in choices %}
+        <label for="id_answer_{{ id }}">
+        <input value="{{ id }}" type="radio" id="id_answer_{{ id }}"
+               onclick="this.form.submit()" name="answer"/>
+               {{ title }}
+        </label>
+    {% endfor %}
+    </form>
+</div>
 
 {% endblock %}

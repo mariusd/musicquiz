@@ -79,10 +79,12 @@ class Song(models.Model):
         self.songsimilarity_set.filter(second=similar)[0].delete()
         similar.songsimilarity_set.filter(second=self)[0].delete()
     
-    def fetch_similar(self, limit=25):
+    def fetch_similar(self, limit=10):
         """Fetch a list or similar songs and save them in the database.
         
-        Returns the count of newly created similar songs.
+        Returns the count of newly added similar songs.
+        
+        # TODO make this method work faster
 
         >>> a = Song.objects.create(artist='a', title='a')
         >>> a.fetch_similar(-1)
@@ -111,6 +113,8 @@ class Song(models.Model):
     def update_youtube_code(self):
         """Find video for a song and update youtube code field.
         
+        # TODO move this method to utility.py?
+        
         >>> song = Song(artist='Faithless', title='Insomnia')
         >>> song.update_youtube_code()
         >>> song.youtube_code
@@ -122,8 +126,25 @@ class Song(models.Model):
         feed = service.YouTubeQuery(query)
         if len(feed.entry) > 0:
             url = feed.entry[0].GetSwfUrl()
+            # FIXME url can be None?
             youtube_code = extract_youtube_code(url)
             self.youtube_code = youtube_code
+        else:
+            # No youtube video was found, raise an exception?
+            pass
+            
+    def get_youtube_code(self):
+        """Return youtube code. If the code is not set, try to find it.
+        
+        >>> s = Song(artist='Queen', title='Radio Gaga')
+        >>> s.youtube_code is None
+        True
+        >>> s.get_youtube_code()
+        'LncAQR47eZo'
+        """
+        if self.youtube_code is None:
+            self.update_youtube_code()
+        return self.youtube_code
         
     @staticmethod
     def pick_random(exclude=[]):
@@ -164,7 +185,11 @@ class Song(models.Model):
         answers = random.sample(query, min([total, count]) - 1)
         answers += [self]
         random.shuffle(answers)
-        return answers       
+        return answers
+        
+    def get_label(self):
+        """Return the name of song, which will be shown to the visitor."""
+        return u'%s \u2013 %s' % (self.artist, self.title)
 
     def __unicode__(self):
         """Return a string representation mainly for debugging."""

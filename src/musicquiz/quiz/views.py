@@ -29,12 +29,12 @@ def show_question(request):
             'correct' : request.POST['answer'] == str(current.pk)
         }
     song = Song.pick_random()
+    song.update_youtube_code()
     request.session['current_song'] = song
     possible_answers = song.get_possible_answers()
-    choices = [(item.pk, item) for item in possible_answers]
-    answer_form = AnswerForm(choices)
+    choices = [(item.pk, item.get_label()) for item in possible_answers]
     return render_to_response('quiz/question.html', {
-        'answer_form' : answer_form,
+        'choices' : choices,
         'song' : song,
         'prev_result' : prev_result,
         'name' : request.session['username'],
