@@ -126,9 +126,9 @@ class Song(models.Model):
         feed = service.YouTubeQuery(query)
         if len(feed.entry) > 0:
             url = feed.entry[0].GetSwfUrl()
-            # FIXME url can be None?
-            youtube_code = extract_youtube_code(url)
-            self.youtube_code = youtube_code
+            if url:
+                youtube_code = extract_youtube_code(url)
+                self.youtube_code = youtube_code
         else:
             # No youtube video was found, raise an exception?
             pass

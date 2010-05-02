@@ -4,28 +4,7 @@
 
 <script type="text/javascript" src="/static/js/mootools.js"></script>
 <script type="text/javascript" src="/static/js/moocheck.js"></script>
-
-{% if prev_result %}
-    {% if prev_result.correct %}
-        <p class="success">Congratulations! You have answered correctly!</p>
-    {% else %}
-        <p class="error">Your answer was incorrect.</p>
-    {% endif %}
-{% endif %}
-
-<div id="timer">
-    <img src="/static/images/loader.gif"/>
-</div>
-<h2>Question</h2>
-
-<p>{{ name }}, can you guess what song is playing?</p>
-
 <script type="text/javascript" src="/static/js/swfobject.js"></script>
-<div id="ytapiplayer">
-    <p class="error">
-    You need Flash player 8+ and JavaScript enabled to hear music.
-    </p>
-</div>
 
 <script type="text/javascript">
 
@@ -77,13 +56,42 @@
         }
         if (timeLeft >= 100) {
             setTimeout("runTimer()", 100);
+        } else {
+            timeOver();
         }
     }   
     
+    function timeOver() {
+        ytplayer.stopVideo();
+        var form = document.getElementById("answer_form");
+        form.submit();
+    }
+    
 </script>
 
+{% if prev_result %}
+    {% if prev_result.correct %}
+        <p class="success">Congratulations! You have answered correctly!</p>
+    {% else %}
+        <p class="error">Your answer was incorrect.</p>
+    {% endif %}
+{% endif %}
+
+<div id="timer">
+    <img src="/static/images/loader.gif"/>
+</div>
+<h2>Question</h2>
+
+<p>{{ name }}, can you guess what song is playing?</p>
+
+<div id="ytapiplayer">
+    <p class="error">
+    You need Flash player 8+ and JavaScript enabled to hear music.
+    </p>
+</div>
+
 <div id="answers">
-    <form method="post" action="">
+    <form method="post" action="" id="answer_form">
     {% for id, title in choices %}
         <label for="id_answer_{{ id }}">
         <input value="{{ id }}" type="radio" id="id_answer_{{ id }}"
