@@ -13,22 +13,74 @@
     {% endif %}
 {% endif %}
 
+<div id="timer">
+    <img src="/static/images/loader.gif"/>
+</div>
 <h2>Question</h2>
 
 <p>{{ name }}, can you guess what song is playing?</p>
 
-<object style="height: 25px; width: 425px">
-    <param name="movie"
-           value="http://www.youtube.com/v/{{song.youtube_code}}&autoplay=1">
-    <param name="allowFullScreen" value="true">
-    <param name="allowScriptAccess" value="always">
-    <embed
-        src="http://www.youtube.com/v/{{song.youtube_code}}&autoplay=1"
-        type="application/x-shockwave-flash"
-        allowfullscreen="true"
-        allowScriptAccess="always"
-        width="425" height="25">
-</object>
+<script type="text/javascript" src="/static/js/swfobject.js"></script>
+<div id="ytapiplayer">
+    <p class="error">
+    You need Flash player 8+ and JavaScript enabled to hear music.
+    </p>
+</div>
+
+<script type="text/javascript">
+
+    /* Source: http://code.google.com/apis/youtube/js_api_reference.html */
+    var PlayerState = {
+        UNSTARTED : -1,
+        ENDED : 0,
+        PLAYING : 1,
+        PAUSED : 2,
+        BUFFERING : 3,
+        VIDEO_CUED : 5
+    };
+
+    /* default size "425", "356" */
+    var params = { allowScriptAccess: "always" };
+    var atts = { id: "myytplayer" };
+    swfobject.embedSWF(
+        "http://www.youtube.com/v/{{ song.youtube_code }}" 
+            + "?enablejsapi=1&playerapiid=ytplayer", 
+        "ytapiplayer", "0", "0", "8", null, null, params, atts
+    );
+    
+    function onYouTubePlayerReady(playerId) {
+        ytplayer = document.getElementById("myytplayer");
+        ytplayer.addEventListener("onStateChange", "onytplayerStateChange");
+        ytplayer.setVolume(100);
+        ytplayer.seekTo(30, true);
+    }
+
+    function onytplayerStateChange(newState) {
+        if (newState == PlayerState.PLAYING && !timerStarted) {
+            timerStarted = true;
+            var timerDiv = document.getElementById("timer");
+            var loader = timerDiv.getElementsByTagName("img")[0];
+            timerDiv.removeChild(loader);
+            runTimer();
+        }
+    }
+    
+    var timeLeft = 20 * 1000;
+    var timerStarted = false;
+    
+    function runTimer() {
+        var timerDiv = document.getElementById("timer");
+        timeLeft -= 100;
+        timerDiv.firstChild.nodeValue = sprintf("%.1f", timeLeft / 1000);
+        if (timeLeft < 10 * 1000) {
+            timerDiv.style.color = '#CC0000';
+        }
+        if (timeLeft >= 100) {
+            setTimeout("runTimer()", 100);
+        }
+    }   
+    
+</script>
 
 <div id="answers">
     <form method="post" action="">
