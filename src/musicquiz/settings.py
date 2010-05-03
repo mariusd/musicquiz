@@ -4,6 +4,11 @@ import os.path
 
 LASTFM_API_KEY = 'b25b959554ed76058ac220b7b2e0a026'
 
+# Settings for django-coverage
+TEST_RUNNER = 'django_coverage.coverage_runner.run_tests'
+COVERAGE_REPORT_HTML_OUTPUT_DIR = \
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'coverage')
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
