@@ -8,6 +8,21 @@ from forms import AnswerForm
 def index(request):
     """Show index page with the welcome form.
     
+    >>> import django.test
+    >>> from django.core.urlresolvers import reverse
+    >>> django.test.utils.setup_test_environment()
+    >>> c = django.test.Client()
+    >>> index = reverse('musicquiz.quiz.views.index')
+    >>> response = c.get(index)
+    >>> response.status_code
+    200
+    >>> response.context['form'] #doctest: +ELLIPSIS
+    <musicquiz.quiz.forms.WelcomeForm object at ...>
+    
+    # Submitting a correct name causes a redirect
+    >>> response = c.post(index, { 'name' : 'Mr. User Name' })
+    >>> response.status_code
+    302
     """
     if request.method == 'POST':
         form = WelcomeForm(request.POST)
@@ -23,6 +38,21 @@ def index(request):
 def show_question(request):
     """Show a randomly chosen question to the visitor.
     
+    >>> import django.test
+    >>> from django.core.urlresolvers import reverse
+    >>> django.test.utils.setup_test_environment()
+    >>> c = django.test.Client()
+    >>> question = reverse('musicquiz.quiz.views.show_question')
+    
+    # Anonymous visitors are redirected back to index page
+    >>> response = c.get(question)
+    >>> response.status_code
+    302
+    
+    >>> index = reverse('musicquiz.quiz.views.index')
+    
+    # Tests need data
+    #>>> response = c.post(index, { 'name' : 'Mr. Foo Bar' }, follow=True)
     """    
     if 'username' not in request.session.keys():
         return HttpResponseRedirect('/quiz/')

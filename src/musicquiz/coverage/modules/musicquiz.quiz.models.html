@@ -127,16 +127,16 @@
 <div id="content-header">
   <h1>
     <span id="module-name">musicquiz.quiz.models</span>:
-    111 total statements,
-    <span class="normal">93.5% covered</span>
+    112 total statements,
+    <span class="normal">94.6% covered</span>
   </h1>
-  <p>Generated: Mon 2010-05-03 23:05 FLE Daylight Time</p>
+  <p>Generated: Tue 2010-05-04 01:04 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\models.py</p>
   <p>
     Stats:
-    <span class="executed">86 executed</span>,
-    <span class="missed">6 missed</span>,
-    <span class="excluded">19 excluded</span>,
+    <span class="executed">87 executed</span>,
+    <span class="missed">5 missed</span>,
+    <span class="excluded">20 excluded</span>,
     <span class="ignored">197 ignored</span> 
   </p> 
 </div>
@@ -332,7 +332,7 @@
 <li class="executed"><code>            raise ValueError('could not pick any song')</code></li>
 <li class="ignored"><code>        else:</code></li>
 <li class="executed"><code>            if song.youtube_code is None:</code></li>
-<li class="missed"><code>                song.update_youtube_code()</code></li>
+<li class="executed"><code>                song.update_youtube_code()</code></li>
 <li class="executed"><code>            if song.youtube_code is not None:</code></li>
 <li class="executed"><code>                return song</code></li>
 <li class="ignored"><code>            else:</code></li>
@@ -450,6 +450,7 @@
 <li class="executed"><code>        pass</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>    import doctest</code></li>
+<li class="excluded"><code>    import musicquiz.quiz.utility</code></li>
 <li class="executed"><code>    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)</code></li>
   </ol>
 </div>

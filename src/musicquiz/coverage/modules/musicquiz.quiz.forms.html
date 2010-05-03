@@ -128,16 +128,16 @@
   <h1>
     <span id="module-name">musicquiz.quiz.forms</span>:
     13 total statements,
-    <span class="normal">83.3% covered</span>
+    <span class="normal">100.0% covered</span>
   </h1>
-  <p>Generated: Mon 2010-05-03 23:05 FLE Daylight Time</p>
+  <p>Generated: Tue 2010-05-04 01:04 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\forms.py</p>
   <p>
     Stats:
-    <span class="executed">10 executed</span>,
-    <span class="missed">2 missed</span>,
+    <span class="executed">12 executed</span>,
+    <span class="missed">0 missed</span>,
     <span class="excluded">1 excluded</span>,
-    <span class="ignored">24 ignored</span> 
+    <span class="ignored">33 ignored</span> 
   </p> 
 </div>
 
@@ -170,7 +170,16 @@
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>class AnswerForm(forms.Form):</code></li>
-<li class="ignored"><code>    """Answer form presents possible answers to the quiz question."""</code></li>
+<li class="ignored"><code>    """Answer form presents possible answers to the quiz question.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>    &gt;&gt;&gt; choices = [(1, 'One'), (2, 'Two')]</code></li>
+<li class="ignored"><code>    &gt;&gt;&gt; form = AnswerForm(choices)</code></li>
+<li class="ignored"><code>    &gt;&gt;&gt; print form.as_ul() #doctest: +ELLIPSIS</code></li>
+<li class="ignored"><code>    &lt;li&gt;...</code></li>
+<li class="ignored"><code>    &lt;li&gt;&lt;label for="id_answer_0"&gt;&lt;input value="1" ... /&gt; One&lt;/label&gt;&lt;/li&gt;</code></li>
+<li class="ignored"><code>    &lt;li&gt;&lt;label for="id_answer_1"&gt;&lt;input value="2" ... /&gt; Two&lt;/label&gt;&lt;/li&gt;</code></li>
+<li class="ignored"><code>    ...&lt;/li&gt;</code></li>
+<li class="ignored"><code>    """</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    answer = forms.ChoiceField(</code></li>
 <li class="ignored"><code>        label=None,</code></li>
@@ -178,8 +187,8 @@
 <li class="ignored"><code>    )</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    def __init__(self, choices):</code></li>
-<li class="missed"><code>        super(AnswerForm, self).__init__()</code></li>
-<li class="missed"><code>        self.fields['answer'].choices = choices</code></li>
+<li class="executed"><code>        super(AnswerForm, self).__init__()</code></li>
+<li class="executed"><code>        self.fields['answer'].choices = choices</code></li>
   </ol>
 </div>
 

@@ -25,7 +25,16 @@ class WelcomeForm(forms.Form):
     
     
 class AnswerForm(forms.Form):
-    """Answer form presents possible answers to the quiz question."""
+    """Answer form presents possible answers to the quiz question.
+    
+    >>> choices = [(1, 'One'), (2, 'Two')]
+    >>> form = AnswerForm(choices)
+    >>> print form.as_ul() #doctest: +ELLIPSIS
+    <li>...
+    <li><label for="id_answer_0"><input value="1" ... /> One</label></li>
+    <li><label for="id_answer_1"><input value="2" ... /> Two</label></li>
+    ...</li>
+    """
     
     answer = forms.ChoiceField(
         label=None,
