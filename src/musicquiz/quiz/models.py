@@ -140,7 +140,7 @@ class Song(models.Model):
         >>> song.youtube_code
         'tBrUjvONIrA'
         
-        # Make sure this method handles unicode names properly
+        # This method handles unicode names properly
         >>> godzilla = Song(artist=u'Blue Öyster Cult', title=u'Godzilla')
         >>> godzilla.update_youtube_code()
         >>> godzilla.youtube_code
@@ -228,7 +228,12 @@ class Song(models.Model):
         return answers
         
     def get_label(self):
-        """Return the name of song, which will be shown to the visitor."""
+        """Return the name of song, which will be shown to the visitor.
+        
+        # Not the most meaningful test case..
+        >>> Song(artist='The Knife', title='Heartbeats').get_label()
+        u'The Knife \u2013 Heartbeats'
+        """
         return u'%s \u2013 %s' % (self.artist, self.title)
 
     def __unicode__(self):

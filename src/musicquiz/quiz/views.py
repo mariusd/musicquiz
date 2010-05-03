@@ -6,7 +6,9 @@ from forms import WelcomeForm
 from forms import AnswerForm
 
 def index(request):
-    """Show index page with the welcome form."""
+    """Show index page with the welcome form.
+    
+    """
     if request.method == 'POST':
         form = WelcomeForm(request.POST)
         if form.is_valid():
@@ -19,7 +21,9 @@ def index(request):
     })
     
 def show_question(request):
-    """Show a randomly chosen question to the visitor."""    
+    """Show a randomly chosen question to the visitor.
+    
+    """    
     if 'username' not in request.session.keys():
         return HttpResponseRedirect('/quiz/')
         

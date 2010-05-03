@@ -7,10 +7,10 @@ class StrippedCharField(forms.CharField):
      >>> field.clean('   value\t ')
      u'value'
      >>> field = StrippedCharField(min_length=5)
-     >>> field.clean('    1234')
+     >>> field.clean('    1234') #doctest: +ELLIPSIS
      Traceback (most recent call last):
      ...
-     ValidationError: [u'Ensure this value has at least 5 characters (it has 4).']
+     ValidationError: [u'Ensure this value has at least 5 characters ...
      """
      def clean(self, value):
          if value is not None:

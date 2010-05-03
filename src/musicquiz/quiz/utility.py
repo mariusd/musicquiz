@@ -6,6 +6,8 @@ def extract_youtube_code(url):
     >>> eyc = extract_youtube_code
     >>> eyc('http://www.youtube.com/watch?v=qndUS3SIf1Q&feature=related')
     'qndUS3SIf1Q'
+    >>> eyc('http://www.youtube.com/watch?feature=related&v=qndUS3SIf1Q')
+    'qndUS3SIf1Q'
     >>> eyc('http://youtube.com/v/3Ii8m1jgn_M?f=videos&app=youtube_gdata')
     '3Ii8m1jgn_M'
     >>> eyc('http://www.youtube.com/watch?WRONG=qndUS3SIf1Q')
