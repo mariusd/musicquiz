@@ -22,16 +22,21 @@ def show_question(request):
     """Show a randomly chosen question to the visitor."""    
     if 'username' not in request.session.keys():
         return HttpResponseRedirect('/quiz/')
+        
     prev_result = None
     if request.method == 'POST' and 'current_song' in request.session.keys():
         current = request.session['current_song']
-        prev_result = {
-            'correct' : request.POST['answer'] == str(current.pk)
-        }
+        prev_result = { }
+        if request.POST['timeout_flag'] == 'true':
+            prev_result['status'] = 'timeout'
+        elif request.POST['answer'] == str(current.pk):
+            prev_result['status'] = 'correct'
+        else:
+            prev_result['status'] = 'incorrect'
+            
     song = Song.pick_random()
-    song.update_youtube_code()
     request.session['current_song'] = song
-    possible_answers = song.get_possible_answers()
+    possible_answers = song.get_possible_answers(count=8)
     choices = [(item.pk, item.get_label()) for item in possible_answers]
     return render_to_response('quiz/question.html', {
         'choices' : choices,

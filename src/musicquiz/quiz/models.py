@@ -1,10 +1,14 @@
+#-*- coding: utf8 -*-
+
 from django.db import models
+from django.db import IntegrityError
 from django.conf import settings
 from utility import extract_youtube_code
 import gdata.youtube
 import gdata.youtube.service
 import pylast
 import random
+import urllib
 
 # Create your models here.
 
@@ -111,7 +115,7 @@ class Song(models.Model):
         return new_songs
 
     def update_youtube_code(self):
-        """Find video for a song and update youtube code field.
+        u"""Find video for a song and update youtube code field.
         
         # TODO move this method to utility.py?
         
@@ -119,47 +123,57 @@ class Song(models.Model):
         >>> song.update_youtube_code()
         >>> song.youtube_code
         'tBrUjvONIrA'
+        >>> godzilla = Song(artist=u'Blue Öyster Cult', title=u'Godzilla')
+        >>> godzilla.update_youtube_code()
+        >>> godzilla.youtube_code
+        'k6rDWqjnW7w'
         """
         service = gdata.youtube.service.YouTubeService()
         query = gdata.youtube.service.YouTubeVideoQuery()
-        query.vq = '%s %s' % (self.artist, self.title)
+        query_string = u'%s %s' % (self.artist, self.title)
+        query.vq = query_string.encode('utf-8')
         feed = service.YouTubeQuery(query)
         if len(feed.entry) > 0:
             url = feed.entry[0].GetSwfUrl()
             if url:
                 youtube_code = extract_youtube_code(url)
                 self.youtube_code = youtube_code
+                self.save()
         else:
             # No youtube video was found, raise an exception?
             pass
-            
-    def get_youtube_code(self):
-        """Return youtube code. If the code is not set, try to find it.
-        
-        >>> s = Song(artist='Queen', title='Radio Gaga')
-        >>> s.youtube_code is None
-        True
-        >>> s.get_youtube_code()
-        'LncAQR47eZo'
-        """
-        if self.youtube_code is None:
-            self.update_youtube_code()
-        return self.youtube_code
         
     @staticmethod
     def pick_random(exclude=[]):
         """Pick a random song which is not in the exclude list.
         
+        Returned song is guaranteed to have youtube code.
+        
+        # Lets create a song to make sure database is not empty
+        >>> a = Song(artist='a', title='a', youtube_code='a')
+        >>> a.save()
+        >>> Song.pick_random().youtube_code is not None
+        True
+        
         >>> Song.pick_random(exclude=Song.objects.all())
         Traceback (most recent call last):
         ...
         ValueError: could not pick any song
+        
+        >>> a.delete()
         """
         exclude_pks = [song.pk for song in exclude]
         try:
-            return random.choice(Song.objects.exclude(pk__in=exclude_pks))
+            song = random.choice(Song.objects.exclude(pk__in=exclude_pks))
         except IndexError, e:
             raise ValueError('could not pick any song')
+        else:
+            if song.youtube_code is None:
+                song.update_youtube_code()
+            if song.youtube_code is not None:
+                return song
+            else:
+                return Song.pick_random(exclude=exclude + [song])
         
     def get_possible_answers(self, count=5):
         """Return a list of random possible answers.
@@ -170,7 +184,7 @@ class Song(models.Model):
         # Correct answer must be one of the possible answers
         >>> [song in song.get_possible_answers() for i in range(5)]
         [True, True, True, True, True]
-        
+
         >>> song.get_possible_answers(count=0)
         Traceback (most recent call last):
         ...
@@ -180,10 +194,18 @@ class Song(models.Model):
         """
         if count < 1:
             raise ValueError('there must be at least one answer')
-        total = Song.objects.count()
-        query = Song.objects.exclude(pk__in=[self.pk])
+        total = self.similar.count()
+        if total < count - 1:
+            self.fetch_similar(count)
+            total = self.similar.count()
+        query = self.similar.exclude(pk__in=[self.pk])
         answers = random.sample(query, min([total, count]) - 1)
         answers += [self]
+        
+        # If there are still not enough answers, put some random songs
+        while len(answers) < count:
+            answers.append(Song.pick_random(exclude=answers))
+            
         random.shuffle(answers)
         return answers
         

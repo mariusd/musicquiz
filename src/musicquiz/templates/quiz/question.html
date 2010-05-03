@@ -2,7 +2,8 @@
 
 {% block content %}
 
-<script type="text/javascript" src="/static/js/mootools.js"></script>
+<script type="text/javascript" src="/static/js/mootools-1.2.4-core-yc.js"></script>
+<script type="text/javascript" src="/static/js/mootools-1.2.4.4-more.js"></script>
 <script type="text/javascript" src="/static/js/moocheck.js"></script>
 <script type="text/javascript" src="/static/js/swfobject.js"></script>
 
@@ -26,7 +27,7 @@
             + "?enablejsapi=1&playerapiid=ytplayer", 
         "ytapiplayer", "0", "0", "8", null, null, params, atts
     );
-    
+          
     function onYouTubePlayerReady(playerId) {
         ytplayer = document.getElementById("myytplayer");
         ytplayer.addEventListener("onStateChange", "onytplayerStateChange");
@@ -35,6 +36,8 @@
     }
 
     function onytplayerStateChange(newState) {
+        if (formSubmitted)
+            return;
         if (newState == PlayerState.PLAYING && !timerStarted) {
             timerStarted = true;
             var timerDiv = document.getElementById("timer");
@@ -46,6 +49,8 @@
     
     var timeLeft = 20 * 1000;
     var timerStarted = false;
+    var timer = null;
+    var formSubmitted = false;
     
     function runTimer() {
         var timerDiv = document.getElementById("timer");
@@ -55,26 +60,52 @@
             timerDiv.style.color = '#CC0000';
         }
         if (timeLeft >= 100) {
-            setTimeout("runTimer()", 100);
+            timer = setTimeout("runTimer()", 100);
         } else {
             timeOver();
         }
-    }   
+    }
     
-    function timeOver() {
+    function submitForm() {
+        if (formSubmitted)
+            return;
+        formSubmitted = true;
+        if (timer != null) {
+            clearTimeout(timer);
+        }
         ytplayer.stopVideo();
         var form = document.getElementById("answer_form");
         form.submit();
     }
     
+    function timeOver() {
+        ytplayer.stopVideo();
+        var form = document.getElementById("answer_form");
+        var timeoutFlag = document.getElementsByName("timeout_flag")[0];
+        timeoutFlag.value = "true";
+        form.submit();
+    }
+
+    //setTimeout("$('result').fade('out')", 2000);
+    
 </script>
 
 {% if prev_result %}
-    {% if prev_result.correct %}
+    <div id="result">
+    {% ifequal prev_result.status 'correct' %}
         <p class="success">Congratulations! You have answered correctly!</p>
     {% else %}
-        <p class="error">Your answer was incorrect.</p>
-    {% endif %}
+        {% ifequal prev_result.status 'incorrect' %}
+            <p class="error">Your answer was incorrect.</p>
+        {% else %}
+            {% ifequal prev_result.status 'timeout' %}
+                <p class="error">Time is up.</p>
+            {% else %}
+                <p>Undefined status. This is a bug in system.</p>
+            {% endifequal %}
+        {% endifequal %}
+    {% endifequal %}
+    </div>
 {% endif %}
 
 <div id="timer">
@@ -95,10 +126,11 @@
     {% for id, title in choices %}
         <label for="id_answer_{{ id }}">
         <input value="{{ id }}" type="radio" id="id_answer_{{ id }}"
-               onclick="this.form.submit()" name="answer"/>
+               onclick="submitForm()" name="answer"/>
                {{ title }}
         </label>
     {% endfor %}
+    <input type="hidden" name="timeout_flag" value="false"/>
     </form>
 </div>
 
