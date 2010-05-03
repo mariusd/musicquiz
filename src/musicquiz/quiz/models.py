@@ -93,7 +93,7 @@ class Song(models.Model):
         # TODO make this method work faster
 
         >>> a = Song.objects.create(artist='a', title='a')
-        >>> a.fetch_similar(-1)
+        >>> a.fetch_similar(limit=-1)
         Traceback (most recent call last):
         ...
         ValueError: limit must be a positive integer
@@ -125,6 +125,8 @@ class Song(models.Model):
         >>> song.update_youtube_code()
         >>> song.youtube_code
         'tBrUjvONIrA'
+        
+        # Make sure this method handles unicode names properly
         >>> godzilla = Song(artist=u'Blue Öyster Cult', title=u'Godzilla')
         >>> godzilla.update_youtube_code()
         >>> godzilla.youtube_code

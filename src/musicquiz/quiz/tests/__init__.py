@@ -1,7 +1,7 @@
 import unittest
 import doctest
-import forms
-import utility
+import musicquiz.quiz.forms
+import musicquiz.quiz.utility
 from django.test import TestCase
 import homophony
 
@@ -15,8 +15,8 @@ class SimpleTest(TestCase):
 def suite():
     suite = unittest.TestSuite([
         SimpleTest('test_basic_addition'),
-        doctest.DocTestSuite(forms),
-        doctest.DocTestSuite(utility),
+        doctest.DocTestSuite(musicquiz.quiz.forms),
+        doctest.DocTestSuite(musicquiz.quiz.utility),
         homophony.DocFileSuite('tests.txt'),
     ])
     return suite
