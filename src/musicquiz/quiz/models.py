@@ -1,5 +1,7 @@
 #-*- coding: utf8 -*-
 
+# paruošti initial data ir pratrinti db iš version kontrolėss
+
 from django.db import models
 from django.db import IntegrityError
 from django.conf import settings

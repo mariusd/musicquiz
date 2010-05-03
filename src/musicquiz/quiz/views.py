@@ -26,13 +26,21 @@ def show_question(request):
     prev_result = None
     if request.method == 'POST' and 'current_song' in request.session.keys():
         current = request.session['current_song']
-        prev_result = { }
         if request.POST['timeout_flag'] == 'true':
-            prev_result['status'] = 'timeout'
+            prev_result = {
+                'class' : 'error',
+                'message' : 'Time is up.',
+            }
         elif request.POST['answer'] == str(current.pk):
-            prev_result['status'] = 'correct'
+            prev_result = {
+                'class' : 'success',
+                'message' : 'Congratulations! You have answered correctly!',
+            }
         else:
-            prev_result['status'] = 'incorrect'
+            prev_result = {
+                'class' : 'error',
+                'message' : 'Your answer was incorrect.',
+            }
             
     song = Song.pick_random()
     request.session['current_song'] = song
