@@ -17,7 +17,19 @@ import urllib
 # Create your models here.
 
 class Song(models.Model):
-    """Song model responsible for fetching data from web and storing it."""
+    """Song model responsible for fetching data from web and storing it.
+    
+    >>> song = Song.objects.create(artist='Artist', title='Title')
+    >>> unicode(song) #doctest: +ELLIPSIS
+    u'...'
+    
+    # Initially youtube code and similar songs are not set
+    >>> song.youtube_code is None
+    True
+    >>> song.similar.all()
+    []
+    >>> 
+    """
 
     artist = models.CharField(max_length=256)
     title = models.CharField(max_length=256)
@@ -225,11 +237,18 @@ class Song(models.Model):
         
 
 class SongSimilarity(models.Model):
-    """Intermediate model class to store the similarities of songs."""
+    """Intermediate model class to store the similarities of songs.
+    
+    >>> a = Song(artist='A', title='T')
+    >>> b = Song(artist='B', title='T')
+    >>> similarity = SongSimilarity(first=a, second=b, match=1)
+    >>> unicode(similarity) #doctest: +ELLIPSIS
+    u'...'
+    """
     
     first = models.ForeignKey(Song)
     second = models.ForeignKey(Song, related_name='similar_songs')
-    match = models.FloatField(null=True)
+    match = models.FloatField(null=True, blank=True)
     
     class Meta:
         unique_together = (('first', 'second'),)
@@ -240,22 +259,29 @@ class SongSimilarity(models.Model):
         
 
 class Question(models.Model):
-    """Model class for quiz question."""
+    """Model class for quiz question.
     
-    good_choice = models.ForeignKey(Song)
-    other_choices = models.ManyToManyField(Song, related_name='in_answer')
+    >>> q = Question(answer=Song(artist='A', title='T'))
+    >>> unicode(q) #doctest: +ELLIPSIS
+    u'...'
+    >>> q.total_answers, q.correct_answers
+    (0, 0)
+    """
     
-    times_answered = models.IntegerField()
-    times_answered_correctly = models.IntegerField()
+    answer = models.ForeignKey(Song)
+    choices = models.ManyToManyField(Song, related_name='in_answer')
+    
+    total_answers = models.IntegerField(default=0)
+    correct_answers = models.IntegerField(default=0)
     
     def make_guess(self, song):
         pass
     
     def __unicode__(self):
         """Return a string representation mainly for debugging."""
-        return u'%s' % (self.correct)
-        
-        
+        return u'%s' % (self.answer)
+
+
 def suite():
     """Construct test suite for this module.
     
