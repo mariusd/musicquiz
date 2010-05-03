@@ -1,6 +1,8 @@
 #-*- coding: utf8 -*-
 
-# paruošti initial data ir pratrinti db iš version kontrolėss
+# parašyti wsgi_app testavimui
+# paruošti initial data ir pratrinti db iš version kontrolės
+# parašyti doctestus view funkcijoms
 
 from django.db import models
 from django.db import IntegrityError
@@ -252,3 +254,24 @@ class Question(models.Model):
     def __unicode__(self):
         """Return a string representation mainly for debugging."""
         return u'%s' % (self.correct)
+        
+        
+def suite():
+    """Construct test suite for this module.
+    
+    This ensures that proper initialization and cleanup will be
+    performed before and after executing doctests in this module.
+    """
+    
+    def setUp(doctest):
+        """Redirect all web API calls to the local WSGI application.
+        
+        This method is called for each doctest, which is not very good."""
+        pass
+        
+    def tearDown(doctest):
+        """Remove wsgi_interceptions."""
+        pass
+    
+    import doctest
+    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)
