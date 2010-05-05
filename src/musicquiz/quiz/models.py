@@ -1,9 +1,5 @@
 #-*- coding: utf8 -*-
 
-# parašyti wsgi_app testavimui
-# paruošti initial data ir pratrinti db iš version kontrolės
-# parašyti doctestus view funkcijoms
-
 from django.db import models
 from django.db import IntegrityError
 from django.conf import settings
