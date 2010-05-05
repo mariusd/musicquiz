@@ -70,8 +70,6 @@ def reconstruct_url(environ):
     if environ['HTTP_HOST'] == 'gdata.youtube.com':
         return '?'.join([environ['PATH_INFO'], environ['QUERY_STRING']])
         
-    print environ['wsgi.input'].read()
-    
     from urllib import quote
     url = environ['wsgi.url_scheme']+'://'
 
@@ -91,6 +89,12 @@ def reconstruct_url(environ):
     url += quote(environ.get('PATH_INFO',''))
     if environ.get('QUERY_STRING'):
         url += '?' + environ['QUERY_STRING']
+        
+    # Another temporary solution -- pylast makes web api queries
+    # using POST method, so I just stick POST data to url. It seems to work.
+    if environ.get('wsgi.input'):
+        url += '?' + environ['wsgi.input'].read()
+        
     return url
    
 def create_app(host, port=80):
@@ -114,7 +118,6 @@ def create_app(host, port=80):
         except IOError:
             create_fn, script = wsgi_intercept._wsgi_intercept[(host, port)]
             remove_redirect(host, port)
-            print url
             filedata = urllib2.urlopen(url).read()
             redirect(host, port)
             open(file, "w").write(filedata)

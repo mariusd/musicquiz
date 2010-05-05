@@ -8,5 +8,6 @@ downloads
 eggs
 parts
 src/*.egg-info
+src/musicquiz/quiz/tests/data
 Thumbs.db
 sqlite3.db
