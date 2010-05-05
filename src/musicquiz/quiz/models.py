@@ -294,15 +294,19 @@ def suite():
     performed before and after executing doctests in this module.
     """
     
+    import musicquiz.quiz.tests.wsgi_test_app as wsgi_test_app
+    
     def setUp(doctest):
         """Redirect all web API calls to the local WSGI application.
         
         This method is called for each doctest, which is not very good."""
-        pass
+        wsgi_test_app.redirect('gdata.youtube.com')
+        wsgi_test_app.redirect('ws.audioscrobbler.com')
         
     def tearDown(doctest):
         """Remove wsgi_interceptions."""
-        pass
+        wsgi_test_app.remove_redirect('gdata.youtube.com')
+        wsgi_test_app.remove_redirect('ws.audioscrobbler.com')
     
     import doctest
     return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)
