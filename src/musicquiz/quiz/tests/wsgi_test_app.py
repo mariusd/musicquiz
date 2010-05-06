@@ -37,78 +37,29 @@ def uninstall():
     httplib.HTTPConnection = OriginalHTTPConnection
     httplib.HTTPSConnection = OriginalHTTPSConnection
 ###########################################################################
-
-def reconstruct_url(environ):
-    """Reconstruct full URL from environ dictionary.
+  
+def create_app(host, reconstruct_url):
+    """Return WSGI app which intercepts calls to `host` and returns
+    a local copy of response data. If a local copy does not exist, this
+    app connects to the original data source, saves a local copy, and
+    then returns data to user.
     
-    Source: http://www.python.org/dev/peps/pep-0333/#url-reconstruction
+    Parameter `recontruct_url` is a function which recontructs original
+    url from WSGI enviroment dictionary. It is needed because of the
+    different ways that libraries make requests. There must be a better
+    solution for this problem, but this one is good enough for me..
     """
-    
-    # Example of environ dictionary that I get from gdata request:
-    
-    #{'CONTENT_TYPE': 'application/atom+xml',
-    # 'wsgi.multithread': 0,
-    # 'SCRIPT_NAME': '',
-    # 'wsgi.input': <cStringIO.StringI object at 0x018987A0>,
-    # 'REQUEST_METHOD': 'GET',
-    # 'HTTP_HOST': 'gdata.youtube.com',
-    # 'PATH_INFO': 'http://gdata.youtube.com/feeds/videos',
-    # 'SERVER_PROTOCOL': 'HTTP/1.1\r\n',
-    # 'QUERY_STRING': 'vq=Ladytron+Playgirl',
-    # 'HTTP_USER_AGENT': 'None GData-Python/2.0.9',
-    # 'wsgi.version': (1, 0),
-    # 'SERVER_NAME': 'gdata.youtube.com',
-    # 'REMOTE_ADDR': '127.0.0.1',
-    # 'wsgi.run_once': 0,
-    # 'wsgi.errors': <cStringIO.StringO object at 0x019FB060>,
-    # 'wsgi.multiprocess': 0,
-    # 'wsgi.url_scheme': 'http',
-    # 'SERVER_PORT': '80',
-    # 'HTTP_ACCEPT_ENCODING': 'identity'}
-    
-    # Temporary (well, most likely it will stay here forever) solution:
-    if environ['HTTP_HOST'] == 'gdata.youtube.com':
-        return '?'.join([environ['PATH_INFO'], environ['QUERY_STRING']])
-        
-    from urllib import quote
-    url = environ['wsgi.url_scheme']+'://'
-
-    if environ.get('HTTP_HOST'):
-        url += environ['HTTP_HOST']
-    else:
-        url += environ['SERVER_NAME']
-
-        if environ['wsgi.url_scheme'] == 'https':
-            if environ['SERVER_PORT'] != '443':
-               url += ':' + environ['SERVER_PORT']
-        else:
-            if environ['SERVER_PORT'] != '80':
-               url += ':' + environ['SERVER_PORT']
-
-    url += quote(environ.get('SCRIPT_NAME',''))
-    url += quote(environ.get('PATH_INFO',''))
-    if environ.get('QUERY_STRING'):
-        url += '?' + environ['QUERY_STRING']
-        
-    # Another temporary solution -- pylast makes web api queries
-    # using POST method, so I just stick POST data to url. It seems to work.
-    if environ.get('wsgi.input'):
-        url += '?' + environ['wsgi.input'].read()
-        
-    return url
-   
-def create_app(host, port=80):
 
     def test_app(environ, start_response):
         """Simplest possible application object"""
-        url =  reconstruct_url(environ)
+        url, port =  reconstruct_url(environ), 80
         key = md5hash(url)
         status = '200 OK'
-        response_headers = [('Content-type','text/xml')]
+        response_headers = [('Content-type', 'text/xml')]
         start_response(status, response_headers)
         dir = os.path.join(os.path.dirname(__file__), 'data', host)
         try:
-            os.mkdir(dir)
+            os.makedirs(dir)
         except OSError:
             # if the directory was already created
             pass 
@@ -117,20 +68,20 @@ def create_app(host, port=80):
             filedata = open(file).read()
         except IOError:
             create_fn, script = wsgi_intercept._wsgi_intercept[(host, port)]
-            remove_redirect(host, port)
+            remove_redirect(host)
             filedata = urllib2.urlopen(url).read()
-            redirect(host, port)
+            redirect(host, reconstruct_url)
             open(file, "w").write(filedata)
         return [filedata]
         
     return test_app
     
-def redirect(host, port=80):
+def redirect(host, reconstruct_url):
     install()
-    app = create_app(host, port)
-    wsgi_intercept.add_wsgi_intercept(host, port, lambda : app)
+    app = create_app(host, reconstruct_url)
+    wsgi_intercept.add_wsgi_intercept(host, 80, lambda : app)
 
-def remove_redirect(host, port=80):
-    wsgi_intercept.remove_wsgi_intercept(host, port)
+def remove_redirect(host):
+    wsgi_intercept.remove_wsgi_intercept(host, 80)
     uninstall()
 

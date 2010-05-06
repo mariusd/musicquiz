@@ -296,8 +296,16 @@ def suite():
         """Redirect all web API calls to the local WSGI application.
         
         This method is called for each doctest, which is not very good."""
-        wsgi_test_app.redirect('gdata.youtube.com')
-        wsgi_test_app.redirect('ws.audioscrobbler.com')
+        
+        def reconstruct_gdata(environ):
+            return '?'.join([environ['PATH_INFO'], environ['QUERY_STRING']])
+            
+        def reconstruct_pylast(environ):
+            query = environ['wsgi.input'].read()
+            return 'http://ws.audioscrobbler.com/2.0/?' + query
+        
+        wsgi_test_app.redirect('gdata.youtube.com', reconstruct_gdata)
+        wsgi_test_app.redirect('ws.audioscrobbler.com', reconstruct_pylast)
         
     def tearDown(doctest):
         """Remove wsgi_interceptions."""
