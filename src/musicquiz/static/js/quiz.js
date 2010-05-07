@@ -53,7 +53,8 @@ function submitForm() {
     if (timer != null) {
         clearTimeout(timer);
     }
-    ytplayer.stopVideo();
+    if (typeof(myVar) !== 'undefined')
+        ytplayer.stopVideo();
     var form = document.getElementById("answer_form");
     form.submit();
 }
