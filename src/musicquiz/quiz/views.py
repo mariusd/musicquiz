@@ -73,8 +73,9 @@ def show_question(request):
         else:
             prev_result = {
                 'class' : 'error',
-                'message' : 'Your answer was incorrect.',
+                'message' : 'Wrong.',
             }
+        prev_result['correct'] = current
             
     song = Song.pick_random()
     request.session['current_song'] = song

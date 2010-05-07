@@ -208,17 +208,22 @@ class Song(models.Model):
         """
         if count < 1:
             raise ValueError('there must be at least one answer')
-        total = self.similar.count()
-        if total < count - 1:
-            self.fetch_similar(count)
-            total = self.similar.count()
-        query = self.similar.exclude(pk__in=[self.pk])
-        answers = random.sample(query, min([total, count]) - 1)
+                   
+#        total = self.similar.count()
+#        if total < count - 1:
+#            self.fetch_similar(count)
+#            total = self.similar.count()
+#        query = self.similar.exclude(pk__in=[self.pk])
+#        answers = random.sample(query, min([total, count]) - 1)
+#        answers += [self]
+
+        query = Song.objects.exclude(pk__in=[self.pk])
+        answers = random.sample(query, count - 1)
         answers += [self]
-        
+ 
         # If there are still not enough answers, put some random songs
-        while len(answers) < count:
-            answers.append(Song.pick_random(exclude=answers))
+#        while len(answers) < count:
+#            answers.append(Song.pick_random(exclude=answers))
             
         random.shuffle(answers)
         return answers

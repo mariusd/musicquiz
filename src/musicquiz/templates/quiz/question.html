@@ -21,7 +21,15 @@
 
 {% if prev_result %}
     <div id="result">
-        <p class={{ prev_result.class }}>{{ prev_result.message }}</p>
+        <p class={{ prev_result.class }}>{{ prev_result.message }}
+        
+        {% ifequal prev_result.class 'error' %}
+            Correct answer was
+            <a href="http://www.youtube.com/watch?v={{ prev_result.correct.youtube_code }}"
+               target="blank">{{ prev_result.correct.get_label }}</a>
+        {% endifequal %}        
+        </p>
+
     </div>
 {% endif %}
 

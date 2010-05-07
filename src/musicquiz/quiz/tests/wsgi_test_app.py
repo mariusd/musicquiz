@@ -45,7 +45,7 @@ def create_app(host, reconstruct_url):
     then returns data to user.
     
     Parameter `recontruct_url` is a function which recontructs original
-    url from WSGI enviroment dictionary. It is needed because of the
+    url from WSGI environment dictionary. It is needed because of the
     different ways that libraries make requests. There must be a better
     solution for this problem, but this one is good enough for me..
     """
