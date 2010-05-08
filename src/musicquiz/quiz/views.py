@@ -70,7 +70,6 @@ def question(request):
         }
         prev_result['correct'] = current_question.correct_answer
         current_question.skip_question()
-        
     
     if game.is_game_finished():
         game_history_url = reverse('musicquiz.quiz.views.game_history')
@@ -81,6 +80,7 @@ def question(request):
     choices = [(item.pk, unicode(item)) for item in possible_answers]
     return render_to_response('quiz/question.html', {
         'choices' : choices,
-        'song' : next_question.correct_answer,
+        'length' : game.quiz_length,
+        'question' : next_question,
         'prev_result' : prev_result,
     })

@@ -13,7 +13,7 @@
     var params = { allowScriptAccess: "always" };
     var atts = { id: "myytplayer" };
     swfobject.embedSWF(
-        "http://www.youtube.com/v/{{ song.youtube_code }}" 
+        "http://www.youtube.com/v/{{ question.correct_answer.youtube_code }}" 
             + "?enablejsapi=1&playerapiid=ytplayer", 
         "ytapiplayer", "0", "0", "8", null, null, params, atts
     );
@@ -36,8 +36,9 @@
 <div id="timer">
     <img src="/static/images/loader.gif"/>
 </div>
-<h2>Question</h2>
-
+<h2>Question ({{ question.number }}/{{ length }})</h2>
+<a href="{% url musicquiz.quiz.views.question %}"
+   style="clear:both;float: right">Skip question</a>
 <p>Can you guess what song is playing?</p>
 
 <div id="ytapiplayer">

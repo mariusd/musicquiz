@@ -200,6 +200,8 @@ class Game(models.Model):
         
     def current_question(self):
         """Return current question."""
+        if not self.has_started():
+            raise QuizModelException('game has not started')
         return self.questions.order_by('-number')[0]
         
     def is_game_finished(self):
