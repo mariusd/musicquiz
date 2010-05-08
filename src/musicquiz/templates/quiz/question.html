@@ -23,11 +23,11 @@
     <div id="result">
         <p class={{ prev_result.class }}>{{ prev_result.message }}
         
-        {% ifequal prev_result.class 'error' %}
+        {% ifnotequal prev_result.class 'success' %}
             Correct answer was
             <a href="http://www.youtube.com/watch?v={{ prev_result.correct.youtube_code }}"
-               target="blank">{{ prev_result.correct.get_label }}</a>
-        {% endifequal %}        
+               target="blank">{{ prev_result.correct }}</a>
+        {% endifnotequal %}        
         </p>
 
     </div>
@@ -38,7 +38,7 @@
 </div>
 <h2>Question</h2>
 
-<p>{{ name }}, can you guess what song is playing?</p>
+<p>Can you guess what song is playing?</p>
 
 <div id="ytapiplayer">
     <p class="error">
@@ -47,7 +47,8 @@
 </div>
 
 <div id="answers">
-    <form method="post" action="" id="answer_form">
+    <form method="post" id="answer_form"
+          action="{% url musicquiz.quiz.views.question %}">
     {% for id, title in choices %}
         <label for="id_answer_{{ id }}">
         <input value="{{ id }}" type="radio" id="id_answer_{{ id }}"
@@ -55,7 +56,7 @@
                {{ title }}
         </label>
     {% endfor %}
-    <input type="hidden" name="timeout_flag" value="false"/>
+    <input type="hidden" name="remaining_time" value="20.0"/>
     </form>
 </div>
 

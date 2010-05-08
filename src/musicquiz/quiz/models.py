@@ -1,5 +1,3 @@
-#-*- coding: utf8 -*-
-
 from django.db import models
 from django.db import IntegrityError
 from django.conf import settings
@@ -10,283 +8,213 @@ import pylast
 import random
 import urllib
 
+EPSILON = 1e-9
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+    
+class QuizModelError(Error):
+    
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+        
 # Create your models here.
 
-class Song(models.Model):
-    """Song model responsible for fetching data from web and storing it.
+class Artist(models.Model):
+    """Artist model class."""
     
-    >>> song = Song.objects.create(artist='Artist', title='Title')
-    >>> unicode(song) #doctest: +ELLIPSIS
-    u'...'
+    name = models.CharField(max_length=128)
     
-    # Initially youtube code and similar songs are not set
-    >>> song.youtube_code is None
-    True
-    >>> song.similar.all()
-    []
-    >>> 
-    """
-
-    artist = models.CharField(max_length=256)
+    def __unicode__(self):
+        return u'%s' % (self.name)
+    
+    
+class Track(models.Model):
+    """Track model class."""
+    
+    artist = models.ForeignKey(Artist)
     title = models.CharField(max_length=256)
+    
     youtube_code = models.CharField(max_length=20, null=True, blank=True)
-    similar = models.ManyToManyField('self', through='SongSimilarity',
-                                     symmetrical=False)
+    youtube_duration = models.IntegerField(null=True, blank=True)
     
-    def create_similarity(self, similar, match):
-        """Create similarity between songs.
+    @staticmethod
+    def pick_random(exclude=[]):
+        """Pick a random track which is not in the exclude list.
         
-        Parameter `match` is a float value which tells how
-        similar the two songs are. This method must be used
-        to ensure symmetrical relationship.
-        
-        >>> a = Song.objects.create(artist='A', title='a')
-        >>> b = Song.objects.create(artist='B', title='b')
-        >>> a.similar.all()
-        []
-        >>> b.similar.all()
-        []
-        >>> a.create_similarity(b, 42)
-        >>> a.create_similarity(b, 0)
-        Traceback (most recent call last):
-        ...
-        IntegrityError: columns first_id, second_id are not unique
-        >>> b in a.similar.all()
-        True
-        >>> a in b.similar.all()
-        True
-        >>> b in a.similar.filter(songsimilarity__match=42)
-        True
-        >>> b in a.similar.filter(songsimilarity__match=43)
-        False
-        >>> a.delete()
-        >>> b.similar.all()
-        []
-        >>> b.create_similarity(b, 1)
-        Traceback (most recent call last):
-        ...
-        ValueError: song cannot be similar to itself
+        Returned track is guaranteed to have youtube code and duration.
         """
-        if self == similar:
-            raise ValueError('song cannot be similar to itself')
-        SongSimilarity.objects.create(first=self, second=similar, match=match)
-        SongSimilarity.objects.create(first=similar, second=self, match=match)
-    
-    def remove_similarity(self, similar):
-        """Remove similarity between songs.
-        
-        This method must be used to ensure symmetrical relationship.
-        
-        >>> a = Song.objects.create(artist='A', title='a')
-        >>> b = Song.objects.create(artist='B', title='b')
-        >>> a.create_similarity(b, 1)
-        >>> b in a.similar.all()
-        True
-        >>> b.remove_similarity(a)
-        >>> b in a.similar.all()
-        False
-        >>> b.remove_similarity(a)
-        Traceback (most recent call last):
-        ...
-        ValueError: songs are not similar
-        """
-        if similar not in self.similar.all():
-            raise ValueError('songs are not similar')
-        self.songsimilarity_set.filter(second=similar)[0].delete()
-        similar.songsimilarity_set.filter(second=self)[0].delete()
-    
-    def fetch_similar(self, limit=10):
-        """Fetch a list or similar songs and save them in the database.
-        
-        Returns the count of newly added similar songs.
-        
-        # TODO make this method work faster
-
-        >>> a = Song.objects.create(artist='a', title='a')
-        >>> a.fetch_similar(limit=-1)
-        Traceback (most recent call last):
-        ...
-        ValueError: limit must be a positive integer
-        """
-        if limit < 0:
-            raise ValueError('limit must be a positive integer')
-        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
-        track = network.get_track(self.artist, self.title)
-        similar = track.get_similar()
-        new_songs = 0
-        for track in similar[:limit]:
-            name = track.item.artist.name
-            title = track.item.title
-            obj, flag = Song.objects.get_or_create(artist=name, title=title)
-            try:
-                self.create_similarity(obj, track.match)
-            except IntegrityError, e:
-                pass
+        exclude_pks = [track.pk for track in exclude]
+        try:
+            track = random.choice(Track.objects.exclude(pk__in=exclude_pks))
+        except IndexError, e:
+            raise ValueError('could not pick any track')
+        else:
+            if not track.has_youtube_info():
+                track.update_youtube_info()
+            if track.has_youtube_info():
+                return track
             else:
-                new_songs += 1
-        return new_songs
-
-    def update_youtube_code(self):
-        u"""Find video for a song and update youtube code field.
+                return Track.pick_random(exclude=exclude + [track])
+    
+    def has_youtube_info(self):
+        """Check if track has all required info about its youtube video."""
+        youtube_info = [self.youtube_code, self.youtube_duration]
+        return all(field is not None for field in youtube_info)
         
-        # TODO move this method to utility.py?
-        
-        >>> song = Song(artist='Faithless', title='Insomnia')
-        >>> song.update_youtube_code()
-        >>> song.youtube_code
-        'tBrUjvONIrA'
-        
-        # This method handles unicode names properly
-        >>> godzilla = Song(artist=u'Blue Öyster Cult', title=u'Godzilla')
-        >>> godzilla.update_youtube_code()
-        >>> godzilla.youtube_code
-        'k6rDWqjnW7w'
-        """
+    def update_youtube_info(self):
+        """Find youtube video for the track and update youtube info fields."""
         service = gdata.youtube.service.YouTubeService()
         query = gdata.youtube.service.YouTubeVideoQuery()
         query_string = u'%s %s' % (self.artist, self.title)
         query.vq = query_string.encode('utf-8')
         feed = service.YouTubeQuery(query)
         if len(feed.entry) > 0:
-            url = feed.entry[0].GetSwfUrl()
+            entry = feed.entry[0]
+            url = entry.GetSwfUrl()
             if url:
-                youtube_code = extract_youtube_code(url)
-                self.youtube_code = youtube_code
+                self.youtube_code = extract_youtube_code(url)
+                self.youtube_duration = entry.media.duration.seconds
                 self.save()
         else:
             # No youtube video was found, raise an exception?
             pass
+            
+    def fetch_similar(self, limit=None):
+        """Fetch a list or similar tracks and save them in the database.
         
-    @staticmethod
-    def pick_random(exclude=[]):
-        """Pick a random song which is not in the exclude list.
-        
-        Returned song is guaranteed to have youtube code.
-        
-        # Lets create a song to make sure database is not empty
-        >>> a = Song(artist='a', title='a', youtube_code='a')
-        >>> a.save()
-        >>> Song.pick_random().youtube_code is not None
-        True
-        
-        >>> Song.pick_random(exclude=Song.objects.all())
-        Traceback (most recent call last):
-        ...
-        ValueError: could not pick any song
-        
-        >>> a.delete()
+        Returns the count of newly added similar tracks.
         """
-        exclude_pks = [song.pk for song in exclude]
-        try:
-            song = random.choice(Song.objects.exclude(pk__in=exclude_pks))
-        except IndexError, e:
-            raise ValueError('could not pick any song')
-        else:
-            if song.youtube_code is None:
-                song.update_youtube_code()
-            if song.youtube_code is not None:
-                return song
-            else:
-                return Song.pick_random(exclude=exclude + [song])
-        
-    def get_possible_answers(self, count=5):
-        """Return a list of random possible answers.
-        
-        >>> song = Song(artist='Radiohead', title='Karma Police')
-        >>> song.save()
-        
-        # Correct answer must be one of the possible answers
-        >>> [song in song.get_possible_answers() for i in range(5)]
-        [True, True, True, True, True]
+        if limit is not None and limit < 0:
+            raise ValueError('limit must be a positive integer')
+        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
+        lastfm_track = network.get_track(unicode(self.artist), self.title)
+        similar = lastfm_track.get_similar()
+        new_songs = 0
+        if limit is not None:
+            similar = similar[:limit]
+        for similar_track in similar:
+            artist_name = similar_track.item.artist.name
+            title = similar_track.item.title
+            artist, _ = Artist.objects.get_or_create(name=artist_name)      
+            result = Track.objects.get_or_create(artist=artist, title=title)
+            if result[1]:
+                new_songs += 1
+        return new_songs
+    
+    def __unicode__(self):
+        return u'%s \u2013 %s' % (self.artist, self.title)
+    
+    
+class Question(models.Model):
+    """Quiz question model class."""
 
-        >>> song.get_possible_answers(count=0)
-        Traceback (most recent call last):
-        ...
-        ValueError: there must be at least one answer
+    QUESTION_STATES = (
+        ('NOANSWER', 'Not answered'),
+        ('ANSWERED', 'Answer submitted'),
+        ('TIMEOUT', 'Timeout'),
+        ('SKIPPED', 'Skipped'),
+        ('REPORTED', 'Reported as bad'),
+    )
+    
+    game = models.ForeignKey('Game', related_name='questions')
+    number = models.IntegerField()
+    state = models.CharField(max_length=8,
+                choices=QUESTION_STATES, default='NOANSWER')
+    correct_answer = models.ForeignKey(Track, related_name='in_question')
+    
+    given_answer = models.ForeignKey(Track, null=True, blank=True)
+    remaining_time = models.FloatField(null=True, blank=True)
+    
+    def is_answered(self):
+        return self.state != 'NOANSWER'
         
-        >>> song.delete()
+    def answered_correctly(self):
+        if self.is_timeout():
+            return False
+        return self.correct_answer == self.given_answer
+        
+    def make_guess(self, guess):
+        self.remaining_time = guess['remaining_time']
+        if 'answer' in guess.keys():
+            given_answer = Track.objects.get(id=guess['answer'])
+            self.given_answer = given_answer
+        if abs(self.remaining_time) > EPSILON:
+            self.state = 'ANSWERED'
+        else:
+            self.state = 'TIMEOUT'
+        self.save()
+        
+    def calculate_points(self):
+        pass
+        
+    def skip_question(self):
+        self.given_answer = None
+        self.remaining_time = None
+        self.state = 'SKIPPED'
+        self.save()
+        
+    def is_timeout(self):
+        return self.state == 'TIMEOUT'
+        
+    def get_choices(self, count=8):
+        """Return a list of randomly selected possible answers.
+        
+        Correct answer is always one of the possible choices, but
+        other tracks in the list are very likely to be different
+        each time this method gets called.
         """
         if count < 1:
             raise ValueError('there must be at least one answer')
-                   
-#        total = self.similar.count()
-#        if total < count - 1:
-#            self.fetch_similar(count)
-#            total = self.similar.count()
-#        query = self.similar.exclude(pk__in=[self.pk])
-#        answers = random.sample(query, min([total, count]) - 1)
-#        answers += [self]
-
-        query = Song.objects.exclude(pk__in=[self.pk])
-        answers = random.sample(query, count - 1)
-        answers += [self]
- 
-        # If there are still not enough answers, put some random songs
-#        while len(answers) < count:
-#            answers.append(Song.pick_random(exclude=answers))
-            
-        random.shuffle(answers)
-        return answers
-        
-    def get_label(self):
-        """Return the name of song, which will be shown to the visitor.
-        
-        # Not the most meaningful test case..
-        >>> Song(artist='The Knife', title='Heartbeats').get_label()
-        u'The Knife \u2013 Heartbeats'
-        """
-        return u'%s \u2013 %s' % (self.artist, self.title)
+        query = Track.objects.exclude(pk__in=[self.correct_answer.pk])
+        choices = random.sample(query, count - 1) + [self.correct_answer]
+        random.shuffle(choices)
+        return choices
 
     def __unicode__(self):
-        """Return a string representation mainly for debugging."""
-        return u'%s -- %s (%s)' % (self.artist, self.title, self.youtube_code)
+        return u'%s %s. %s' % (self.game, self.number, self.correct_answer)
         
-
-class SongSimilarity(models.Model):
-    """Intermediate model class to store the similarities of songs.
-    
-    >>> a = Song(artist='A', title='T')
-    >>> b = Song(artist='B', title='T')
-    >>> similarity = SongSimilarity(first=a, second=b, match=1)
-    >>> unicode(similarity) #doctest: +ELLIPSIS
-    u'...'
-    """
-    
-    first = models.ForeignKey(Song)
-    second = models.ForeignKey(Song, related_name='similar_songs')
-    match = models.FloatField(null=True, blank=True)
-    
-    class Meta:
-        unique_together = (('first', 'second'),)
-    
-    def __unicode__(self):
-        """Return a string representation mainly for debugging."""
-        return u'%s <-> %s (%f)' % (self.first, self.second, self.match)
         
-
-class Question(models.Model):
-    """Model class for quiz question.
+class Game(models.Model):
+    """Quiz game model class."""
     
-    >>> q = Question(answer=Song(artist='A', title='T'))
-    >>> unicode(q) #doctest: +ELLIPSIS
-    u'...'
-    >>> q.total_answers, q.correct_answers
-    (0, 0)
-    """
+    quiz_length = models.IntegerField()
     
-    answer = models.ForeignKey(Song)
-    choices = models.ManyToManyField(Song, related_name='in_answer')
-    
-    total_answers = models.IntegerField(default=0)
-    correct_answers = models.IntegerField(default=0)
-    
-    def make_guess(self, song):
-        pass
-    
+    def next_question(self):
+        """Create and return next question for the game."""
+        if self.is_game_finished():
+            raise QuizModelError('game is already over')
+        seen_tracks = [q.correct_answer for q in self.questions.all()]
+        answer = Track.pick_random(exclude=seen_tracks)
+        number = self.questions.count() + 1
+        question = Question.objects.create(game=self,
+                        correct_answer=answer, number=number)
+        return question
+        
+    def has_started(self):
+        return self.questions.count() != 0
+        
+    def current_question(self):
+        """Return current question."""
+        return self.questions.order_by('-number')[0]
+        
+    def is_game_finished(self):
+        """Check if the game is already finished."""
+        
+        if not self.questions.count():
+            return False
+        
+        last_question_answered = self.current_question().is_answered()
+        all_questions_shown = self.questions.count() == self.quiz_length
+        return all_questions_shown and last_question_answered
+        
     def __unicode__(self):
-        """Return a string representation mainly for debugging."""
-        return u'%s' % (self.answer)
-
+        return u'#%d' % (self.id)
+    
 
 def suite():
     """Construct test suite for this module.

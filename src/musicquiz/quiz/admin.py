@@ -1,9 +1,13 @@
-from musicquiz.quiz.models import Song
-from musicquiz.quiz.models import SongSimilarity
+from musicquiz.quiz.models import Artist
+from musicquiz.quiz.models import Track
+from musicquiz.quiz.models import Question
+from musicquiz.quiz.models import Game
 from django.contrib import admin
 
-class SongAdmin(admin.ModelAdmin):
-    list_display = ('artist', 'title', 'youtube_code')
-    
-admin.site.register(Song, SongAdmin)
-admin.site.register(SongSimilarity)
+class TrackAdmin(admin.ModelAdmin):
+    list_display = ('artist', 'title', 'youtube_code', 'youtube_duration')
+   
+admin.site.register(Artist)
+admin.site.register(Track, TrackAdmin)
+admin.site.register(Question)
+admin.site.register(Game)

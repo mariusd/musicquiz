@@ -35,7 +35,10 @@ var formSubmitted = false;
 function runTimer() {
     var timerDiv = document.getElementById("timer");
     timeLeft -= 100;
-    timerDiv.firstChild.nodeValue = sprintf("%.1f", timeLeft / 1000);
+    timeLeftFloat = sprintf("%.1f", timeLeft / 1000);
+    timerDiv.firstChild.nodeValue = timeLeftFloat
+    var timeField = document.getElementsByName("remaining_time")[0];
+    timeField.value = timeLeftFloat
     if (timeLeft < 10 * 1000) {
         timerDiv.style.color = '#CC0000';
     }
@@ -62,8 +65,6 @@ function submitForm() {
 function timeOver() {
     ytplayer.stopVideo();
     var form = document.getElementById("answer_form");
-    var timeoutFlag = document.getElementsByName("timeout_flag")[0];
-    timeoutFlag.value = "true";
     form.submit();
 }
 

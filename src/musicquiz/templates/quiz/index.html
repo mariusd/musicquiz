@@ -11,8 +11,7 @@
 <div id="container">
     <h1>Music Quiz</h1>
     {% block content %}
-    <form method="post" action="">
-        {{ form }}
+    <form method="post" action="{% url musicquiz.quiz.views.index %}">
         <input type="submit" value="Start!"/>
     </form>
     {% endblock %}

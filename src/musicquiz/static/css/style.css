@@ -32,7 +32,7 @@ body
 .notice {background:#FFF6BF;color:#514721;border-color:#FFD324;}
 .success {background:#E6EFC2;color:#264409;border-color:#C6D880;}
 
-.error a { color: #003366; }
+#result a { color: #003366; }
 
 #answers label 
 {
