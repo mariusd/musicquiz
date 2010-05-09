@@ -10,7 +10,7 @@ from forms import AnswerForm
 from utility import create_fragment
 
 def index(request):
-    """Show index page with the welcome form."""
+    """Show the index page."""
     
     if request.method == 'POST':
         question_url = reverse('musicquiz.quiz.views.question')
@@ -72,14 +72,16 @@ def highscores(request, page_number=1):
     
     
 def question(request):
-    """Select and show next question to the player."""
+    """Handle player's submitted answer, then select the next question
+    and show it to the player. If there are no more questions, visitor
+    is redirected to the stats page.
+    """
     
     if 'game' not in request.session.keys():
         return HttpResponseRedirect(reverse('musicquiz.quiz.views.index'))
         
     game = request.session['game']
     
-    prev_result = None
     if request.method == 'POST':
         current_question = game.current_question()
         guess_data = { }
@@ -113,7 +115,9 @@ def question(request):
         }
         prev_result['correct'] = current_question.correct_answer
         current_question.skip_question()
-    
+    else:
+        prev_result = None
+        
     if game.is_game_finished():
         game_history_url = reverse('musicquiz.quiz.views.stats')
         return HttpResponseRedirect(game_history_url)

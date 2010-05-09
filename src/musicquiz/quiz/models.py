@@ -15,13 +15,19 @@ class Error(Exception):
     pass
     
 class QuizModelError(Error):
+    """Exception class.
+    
+    New exception classes may be declared in the future for some special
+    situations in this module, but for now all errors use this class.
+    """
     
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return repr(self.value)
-        
+ 
+ 
 # Create your models here.
 
 class Artist(models.Model):
@@ -30,11 +36,13 @@ class Artist(models.Model):
     name = models.CharField(max_length=128)
     
     def fetch_similar(self):
-        """Fetch similar artists from last.fm databases."""
+        """Fetch similar artists from last.fm database."""
+        
         pass
     
     def fetch_tracks(self):
         """Fetch the titles of artist's tracks from last.fm."""
+        
         pass
     
     def __unicode__(self):
@@ -56,6 +64,7 @@ class Track(models.Model):
         
         Returned track is guaranteed to have youtube code and duration.
         """
+        
         exclude_pks = [track.pk for track in exclude]
         try:
             track = random.choice(Track.objects.exclude(pk__in=exclude_pks))
@@ -71,11 +80,13 @@ class Track(models.Model):
     
     def has_youtube_info(self):
         """Check if track has all required info about its youtube video."""
+        
         youtube_info = [self.youtube_code, self.youtube_duration]
         return all(field is not None for field in youtube_info)
         
     def update_youtube_info(self):
         """Find youtube video for the track and update youtube info fields."""
+        
         service = gdata.youtube.service.YouTubeService()
         query = gdata.youtube.service.YouTubeVideoQuery()
         query_string = u'%s %s' % (self.artist, self.title)
@@ -88,15 +99,13 @@ class Track(models.Model):
                 self.youtube_code = extract_youtube_code(url)
                 self.youtube_duration = entry.media.duration.seconds
                 self.save()
-        else:
-            # No youtube video was found, raise an exception?
-            pass
             
     def fetch_similar(self, limit=None):
         """Fetch a list or similar tracks and save them in the database.
         
-        Returns the count of newly added similar tracks.
+        Returns the count of newly added tracks.
         """
+        
         if limit is not None and limit < 0:
             raise ValueError('limit must be a positive integer')
         network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
@@ -140,14 +149,23 @@ class Question(models.Model):
     remaining_time = models.FloatField(null=True, blank=True)
     
     def is_answered(self):
+        """Check if the user has reacted in some way to the question."""
+        
         return self.state != 'NOANSWER'
         
     def answered_correctly(self):
+        """Check if the question was answered correctly and in time."""
+    
         if self.is_timeout():
             return False
         return self.correct_answer == self.given_answer
         
     def make_guess(self, guess):
+        """Try to guess the answer.
+        
+        Dictionary `guess` must contain 'answer' and 'remaining_time' keys.
+        """
+    
         self.remaining_time = guess['remaining_time']
         if 'answer' in guess.keys():
             given_answer = Track.objects.get(id=guess['answer'])
@@ -160,6 +178,8 @@ class Question(models.Model):
         self.save()
         
     def calculate_points(self):
+        """Recalculate the question point field and return its value."""
+    
         if self.answered_correctly():
             self.points = self.remaining_time
         elif self.state == 'ANSWERED' and not self.answered_correctly():
@@ -170,6 +190,8 @@ class Question(models.Model):
         return self.points
         
     def skip_question(self):
+        """Skip question."""
+    
         self.given_answer = None
         self.remaining_time = None
         self.state = 'SKIPPED'
@@ -177,6 +199,8 @@ class Question(models.Model):
         self.save()
         
     def is_timeout(self):
+        """Check if the question was answered in time."""
+        
         return self.state == 'TIMEOUT'
         
     def get_choices(self, count=8):
@@ -186,6 +210,7 @@ class Question(models.Model):
         other tracks in the list are very likely to be different
         each time this method gets called.
         """
+        
         if count < 1:
             raise ValueError('there must be at least one answer')
         query = Track.objects.exclude(pk__in=[self.correct_answer.pk])
@@ -205,6 +230,7 @@ class Game(models.Model):
     
     def next_question(self):
         """Create and return next question for the game."""
+        
         if self.is_game_finished():
             raise QuizModelError('game is already over')
         seen_tracks = [q.correct_answer for q in self.questions.all()]
@@ -216,29 +242,48 @@ class Game(models.Model):
         
     @staticmethod
     def highscore_queryset():
+        """Return the QuerySet for the list of top scorers.
+        
+        If two players have equal scores, the newer one is rated better.
+        This is needed to eliminate the possibility that a player makes
+        a perfect score and then stays in the first position forever. 
+        """
+
         return Game.objects.annotate(score=models.Sum('questions__points')) \
                 .order_by('-score', '-date_started')
         
     def total_score(self):
+        """Return total score."""
+    
         return sum(q.calculate_points() for q in self.questions.all())
         
     def correct_answers(self):
+        """Return the number of correctly answered questions."""
+    
         return sum(1 for q in self.questions.all() if q.answered_correctly())
         
     def has_started(self):
+        """Check if the game has started.
+        
+        The game starts when user requests the first question.
+        """
+        
         return self.questions.count() != 0
         
     def current_question(self):
         """Return current question."""
+        
         if not self.has_started():
             raise QuizModelException('game has not started')
         return self.questions.order_by('-number')[0]
         
     def remaining_questions(self):
+        """Return the number of remaining questions."""
+    
         return self.quiz_length - self.questions.all().count()
         
     def is_game_finished(self):
-        """Check if the game is already finished."""
+        """Check if the game has already finished."""
         
         if not self.questions.count():
             return False
