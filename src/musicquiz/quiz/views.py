@@ -18,13 +18,25 @@ def index(request):
     
 def new_game(request):
     """Start new game."""
+    
     request.session['game'] = Game.objects.create(quiz_length=10)
     question_url = reverse('musicquiz.quiz.views.question')
     return HttpResponseRedirect(question_url)
     
     
-def game_history(request):
+def stats(request):
     """Show stats of the currently going (or finished) game."""
+    
+    if 'game' not in request.session.keys():
+        return HttpResponseRedirect(reverse('musicquiz.quiz.views.index'))
+    game = request.session['game']
+    return render_to_response('quiz/stats.html', {
+        'total_score' : game.total_score(),
+        'questions' : game.questions.all(),
+    })
+    
+    
+def highscore(request):
     pass
     
     
@@ -72,7 +84,7 @@ def question(request):
         current_question.skip_question()
     
     if game.is_game_finished():
-        game_history_url = reverse('musicquiz.quiz.views.game_history')
+        game_history_url = reverse('musicquiz.quiz.views.stats')
         return HttpResponseRedirect(game_history_url)
     
     next_question = game.next_question()

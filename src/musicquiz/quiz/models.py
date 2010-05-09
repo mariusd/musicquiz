@@ -29,6 +29,14 @@ class Artist(models.Model):
     
     name = models.CharField(max_length=128)
     
+    def fetch_similar(self):
+        """Fetch similar artists from last.fm databases."""
+        pass
+    
+    def fetch_tracks(self):
+        """Fetch the titles of artist's tracks from last.fm."""
+        pass
+    
     def __unicode__(self):
         return u'%s' % (self.name)
     
@@ -115,7 +123,7 @@ class Question(models.Model):
 
     QUESTION_STATES = (
         ('NOANSWER', 'Not answered'),
-        ('ANSWERED', 'Answer submitted'),
+        ('ANSWERED', 'Submitted'),
         ('TIMEOUT', 'Timeout'),
         ('SKIPPED', 'Skipped'),
         ('REPORTED', 'Reported as bad'),
@@ -150,7 +158,12 @@ class Question(models.Model):
         self.save()
         
     def calculate_points(self):
-        pass
+        if self.answered_correctly():
+            return self.remaining_time
+        elif self.state == 'ANSWERED' and not self.answered_correctly():
+            return -10
+        else:
+            return 0
         
     def skip_question(self):
         self.given_answer = None
@@ -195,6 +208,9 @@ class Game(models.Model):
                         correct_answer=answer, number=number)
         return question
         
+    def total_score(self):
+        return sum(q.calculate_points() for q in self.questions.all())
+        
     def has_started(self):
         return self.questions.count() != 0
         
@@ -216,36 +232,3 @@ class Game(models.Model):
         
     def __unicode__(self):
         return u'#%d' % (self.id)
-    
-
-def suite():
-    """Construct test suite for this module.
-    
-    This ensures that proper initialization and cleanup will be
-    performed before and after executing doctests in this module.
-    """
-    
-    import musicquiz.quiz.tests.wsgi_test_app as wsgi_test_app
-    
-    def setUp(doctest):
-        """Redirect all web API calls to the local WSGI application.
-        
-        This method is called for each doctest, which is not very good."""
-        
-        def reconstruct_gdata(environ):
-            return '?'.join([environ['PATH_INFO'], environ['QUERY_STRING']])
-            
-        def reconstruct_pylast(environ):
-            query = environ['wsgi.input'].read()
-            return 'http://ws.audioscrobbler.com/2.0/?' + query
-        
-        wsgi_test_app.redirect('gdata.youtube.com', reconstruct_gdata)
-        wsgi_test_app.redirect('ws.audioscrobbler.com', reconstruct_pylast)
-        
-    def tearDown(doctest):
-        """Remove wsgi_interceptions."""
-        wsgi_test_app.remove_redirect('gdata.youtube.com')
-        wsgi_test_app.remove_redirect('ws.audioscrobbler.com')
-    
-    import doctest
-    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)

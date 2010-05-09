@@ -1,0 +1,7 @@
+===================
+Quiz app view tests
+===================
+
+The main purpose of these tests is to check whether view functions
+return correct context.
+

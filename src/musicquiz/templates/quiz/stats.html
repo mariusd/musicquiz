@@ -1,0 +1,41 @@
+{% extends 'quiz/index.html' %}
+
+{% block content %}
+
+<p>Your score is:</p>
+<center><h1>{{ total_score }}</h1></center>
+
+<p>Compared to other players you are:</p>
+
+<table>
+<caption>Detailed score</caption>
+<tr>
+<thead>
+    <th>#</th>
+    <th>Correct answer</th>
+    <th>Your answer</th>
+    <th>Status</th>
+    <th>Points</th>
+</tr>
+</thead>
+<tbody>
+{% for q in questions %}
+    <tr class="{% cycle 'odd' 'even' %}">
+        <td>{{ q.number }}.</td>
+        <td>
+        <a href="http://www.youtube.com/watch?v={{ q.correct_answer.youtube_code }}"
+               target="blank">{{ q.correct_answer }}</a>
+        </td>
+        <td>
+        <a href="http://www.youtube.com/watch?v={{ q.given_answer.youtube_code }}"
+               target="blank">{{ q.given_answer }}</a>
+        </td>
+        <td>{{ q.get_state_display }}</td>
+        <td>{{ q.calculate_points }}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+
+
+{% endblock %}

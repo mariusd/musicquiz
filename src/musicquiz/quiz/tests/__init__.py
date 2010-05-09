@@ -6,19 +6,34 @@ import musicquiz.quiz.views
 from django.test import TestCase
 import homophony
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
-        self.failUnlessEqual(1 + 1, 2)
+def suite():  
+    import musicquiz.quiz.tests.wsgi_test_app as wsgi_test_app
+    
+    def setUp(doctest):
+        """Redirect all web API calls to the local WSGI application."""
         
-def suite():
+        def reconstruct_gdata(environ):
+            return '?'.join([environ['PATH_INFO'], environ['QUERY_STRING']])
+            
+        def reconstruct_pylast(environ):
+            query = environ['wsgi.input'].read()
+            return 'http://ws.audioscrobbler.com/2.0/?' + query
+        
+        wsgi_test_app.redirect('gdata.youtube.com', reconstruct_gdata)
+        wsgi_test_app.redirect('ws.audioscrobbler.com', reconstruct_pylast)
+        
+    def tearDown(doctest):
+        """Remove wsgi_interceptions."""
+        wsgi_test_app.remove_redirect('gdata.youtube.com')
+        wsgi_test_app.remove_redirect('ws.audioscrobbler.com')
+    
     suite = unittest.TestSuite([
-        SimpleTest('test_basic_addition'),
         doctest.DocTestSuite(musicquiz.quiz.forms),
         doctest.DocTestSuite(musicquiz.quiz.utility),
-        doctest.DocTestSuite(musicquiz.quiz.views),
-        homophony.DocFileSuite('tests.txt'),
+        
+        doctest.DocFileSuite('test_models.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('test_views.txt', setUp=setUp, tearDown=tearDown),
+        
+        homophony.DocFileSuite('functional.txt'),
     ])
     return suite

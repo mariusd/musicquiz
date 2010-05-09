@@ -7,7 +7,7 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns('musicquiz.quiz.views',
     (r'^$', 'index'),
     (r'^question/$', 'question'),
-    (r'^game_history/$', 'game_history'),
+    (r'^stats/$', 'stats'),
     
     # Example:
     # (r'^musicquiz/', include('musicquiz.foo.urls')),
