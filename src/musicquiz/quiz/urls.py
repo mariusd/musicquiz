@@ -8,6 +8,8 @@ urlpatterns = patterns('musicquiz.quiz.views',
     (r'^$', 'index'),
     (r'^question/$', 'question'),
     (r'^stats/$', 'stats'),
+    (r'^highscores/$', 'highscores'),
+    (r'^highscores/(\d+)/$', 'highscores'),
     
     # Example:
     # (r'^musicquiz/', include('musicquiz.foo.urls')),

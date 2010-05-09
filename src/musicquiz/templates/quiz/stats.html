@@ -2,13 +2,44 @@
 
 {% block content %}
 
+<p>This is a report of the last quiz that you have played.
+<a href="{% url musicquiz.quiz.views.index %}">Go back to index page</a>.</p>
+
+<h2>Result</h2>
 <p>Your score is:</p>
-<center><h1>{{ total_score }}</h1></center>
+<center style="font-size:xx-large;">{{ total_score }}</center>
 
-<p>Compared to other players you are:</p>
-
+<h2>Highscores</h2>
+<p>You can also take a look at
+<a href="{% url musicquiz.quiz.views.highscores %}">full highscores table</a>.</p>
 <table>
-<caption>Detailed score</caption>
+<tr>
+<thead>
+    <th>#</th>
+    <th>Player</th>
+    <th>Date played</th>
+    <th>Time since</th>
+    <th>Correct answers</th>
+    <th>Score</th>
+</tr>
+</thead>
+<tbody>
+{% for pos, game in other_scores %}
+    <tr class="{% ifequal game this_game %}highlight{% endifequal %} {% cycle 'odd' 'even' %}">
+        <td>{{ pos }}.</td>
+        <td>Not implemented yet</td>
+        <td>{{ game.date_started|date:'Y-m-d h:i' }}</td>
+        <td>{{ game.date_started|timesince }}</td>
+        <td>{{ game.correct_answers }}/{{ game.questions.count }}</td>
+        <td>{{ game.score }}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+
+<h2>Details</h2>
+<p>Clicking on the name of the track opens a new window with youtube video.</p>
+<table>
 <tr>
 <thead>
     <th>#</th>
@@ -23,19 +54,32 @@
     <tr class="{% cycle 'odd' 'even' %}">
         <td>{{ q.number }}.</td>
         <td>
+        {% ifnotequal q.state 'NOANSWER' %} 
         <a href="http://www.youtube.com/watch?v={{ q.correct_answer.youtube_code }}"
                target="blank">{{ q.correct_answer }}</a>
         </td>
+        {% else %} 
+            -
+        {% endifnotequal %}
         <td>
-        <a href="http://www.youtube.com/watch?v={{ q.given_answer.youtube_code }}"
+        {% if q.given_answer %}
+            {% if q.given_answer.youtube_code %}
+            <a href="http://www.youtube.com/watch?v={{ q.given_answer.youtube_code }}"
                target="blank">{{ q.given_answer }}</a>
+            {% else %} 
+            <a href="http://www.youtube.com/results?search_query={{ q.given_answer|iriencode }}"
+               target="blank">{{ q.given_answer }}</a>
+            {% endif %}
+        </td>
+        {% else %} 
+            None
+        {% endif %}
         </td>
         <td>{{ q.get_state_display }}</td>
-        <td>{{ q.calculate_points }}</td>
+        <td>{{ q.points }}</td>
     </tr>
 {% endfor %}
 </tbody>
 </table>
-
 
 {% endblock %}

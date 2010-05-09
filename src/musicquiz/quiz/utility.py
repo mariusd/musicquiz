@@ -1,4 +1,5 @@
 import urlparse
+import collections
 
 def extract_youtube_code(url):
     """Extract youtube video code (e.g. EjAoBKagWQA) from url.
@@ -23,3 +24,4 @@ def extract_youtube_code(url):
     elif result.path[:3] == '/v/':
         return result.path[3:]
     raise ValueError('cannot extract code (wrong url?)')
+    

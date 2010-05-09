@@ -1,0 +1,41 @@
+{% extends 'quiz/index.html' %}
+
+{% block content %}
+<p><a href="{% url musicquiz.quiz.views.index %}">Go back to index page</a>.</p>
+<h2>Highscores</h2>
+<table>
+<tr>
+<thead>
+    <th>#</th>
+    <th>Player</th>
+    <th>Date played</th>
+    <th>Time since</th>
+    <th>Correct answers</th>
+    <th>Score</th>
+</tr>
+</thead>
+<tbody>
+{% for pos, game in scores.object_list %}
+    <tr class="{% cycle 'odd' 'even' %}">
+        <td>{{ pos }}.</td>
+        <td>Not implemented yet</td>
+        <td>{{ game.date_started|date:'Y-m-d h:i' }}</td>
+        <td>{{ game.date_started|timesince }}</td>
+        <td>{{ game.correct_answers }}/{{ game.questions.count }}</td>
+        <td>{{ game.score }}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="pagination">
+{% if scores.has_previous %}
+    <a href="{% url musicquiz.quiz.views.highscores scores.previous_page_number %}">previous</a>
+{% endif %}
+    Page {{ scores.number }} of {{ scores.paginator.num_pages }}
+{% if scores.has_next %}
+    <a href="{% url musicquiz.quiz.views.highscores scores.next_page_number %}">next</a>
+{% endif %}
+</div>
+
+{% endblock %}

@@ -135,6 +135,7 @@ class Question(models.Model):
                 choices=QUESTION_STATES, default='NOANSWER')
     correct_answer = models.ForeignKey(Track, related_name='in_question')
     
+    points = models.FloatField(null=True, blank=True)
     given_answer = models.ForeignKey(Track, null=True, blank=True)
     remaining_time = models.FloatField(null=True, blank=True)
     
@@ -155,20 +156,24 @@ class Question(models.Model):
             self.state = 'ANSWERED'
         else:
             self.state = 'TIMEOUT'
+        self.calculate_points()
         self.save()
         
     def calculate_points(self):
         if self.answered_correctly():
-            return self.remaining_time
+            self.points = self.remaining_time
         elif self.state == 'ANSWERED' and not self.answered_correctly():
-            return -10
+            self.points = -10
         else:
-            return 0
+            self.points = 0
+        self.save()
+        return self.points
         
     def skip_question(self):
         self.given_answer = None
         self.remaining_time = None
         self.state = 'SKIPPED'
+        self.calculate_points()
         self.save()
         
     def is_timeout(self):
@@ -196,6 +201,7 @@ class Game(models.Model):
     """Quiz game model class."""
     
     quiz_length = models.IntegerField()
+    date_started = models.DateTimeField(auto_now_add=True)
     
     def next_question(self):
         """Create and return next question for the game."""
@@ -208,8 +214,16 @@ class Game(models.Model):
                         correct_answer=answer, number=number)
         return question
         
+    @staticmethod
+    def highscore_queryset():
+        return Game.objects.annotate(score=models.Sum('questions__points')) \
+                .order_by('-score', '-date_started')
+        
     def total_score(self):
         return sum(q.calculate_points() for q in self.questions.all())
+        
+    def correct_answers(self):
+        return sum(1 for q in self.questions.all() if q.answered_correctly())
         
     def has_started(self):
         return self.questions.count() != 0
@@ -219,6 +233,9 @@ class Game(models.Model):
         if not self.has_started():
             raise QuizModelException('game has not started')
         return self.questions.order_by('-number')[0]
+        
+    def remaining_questions(self):
+        return self.quiz_length - self.questions.all().count()
         
     def is_game_finished(self):
         """Check if the game is already finished."""

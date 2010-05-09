@@ -11,8 +11,17 @@
 <div id="container">
     <h1>Music Quiz</h1>
     {% block content %}
+    <p>Welcome to Music Quiz website.
+    {% if current_game and not current_game.is_game_finished %}
+        <h2>Continue</h2>
+        <p>You have not finished your last quiz
+        ({{ current_game.remaining_questions }} unanswered questions).
+        <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
+    {% endif %}
+    
+    <h2>New game</h2>
     <form method="post" action="{% url musicquiz.quiz.views.index %}">
-        <input type="submit" value="Start!"/>
+        <p>If you want to start a new game, click this button <input type="submit" value="Start!"/></p>
     </form>
     {% endblock %}
 </div>

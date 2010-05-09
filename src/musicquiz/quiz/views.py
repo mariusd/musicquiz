@@ -1,10 +1,14 @@
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator
+from django.core.paginator import InvalidPage
 
 from models import Game
 from forms import WelcomeForm
 from forms import AnswerForm
+
+import collections
 
 def index(request):
     """Show index page with the welcome form."""
@@ -12,8 +16,15 @@ def index(request):
     if request.method == 'POST':
         question_url = reverse('musicquiz.quiz.views.question')
         return new_game(request)
-            
-    return render_to_response('quiz/index.html')
+    
+    if 'game' in request.session.keys():
+        current_game = request.session['game']
+    else:
+        current_game = None
+                
+    return render_to_response('quiz/index.html', {
+        'current_game' : current_game,
+    })
     
     
 def new_game(request):
@@ -23,21 +34,64 @@ def new_game(request):
     question_url = reverse('musicquiz.quiz.views.question')
     return HttpResponseRedirect(question_url)
     
-    
+   
 def stats(request):
     """Show stats of the currently going (or finished) game."""
     
     if 'game' not in request.session.keys():
         return HttpResponseRedirect(reverse('musicquiz.quiz.views.index'))
-    game = request.session['game']
+        
+    current_game = request.session['game']
+    score = current_game.total_score()
+    
+    highscore_iter = Game.highscore_queryset().iterator()
+    
+    def create_fragment(iter, obj, size):
+        fragment = collections.deque()
+        last_removed = collections.deque()
+        current_added = False
+        for index, element in enumerate(iter):
+            fragment.append((index + 1, element))
+            if element == obj:
+                current_added = True
+            if not current_added and len(fragment) == (size + 1) / 2:
+                last_removed.append(fragment.popleft())
+                if len(last_removed) > size:
+                    last_removed.popleft()
+
+            if len(fragment) == size:
+                break
+        else:
+            for removed in reversed(last_removed):
+                fragment.appendleft(removed)
+                if len(fragment) == size:
+                    break
+        return fragment
+    
+    highscore_fragment = create_fragment(highscore_iter, current_game, 5)
+        
     return render_to_response('quiz/stats.html', {
-        'total_score' : game.total_score(),
-        'questions' : game.questions.all(),
+        'total_score' : score,
+        'this_game' : current_game,
+        'other_scores' : highscore_fragment,
+        'questions' : current_game.questions.all(),
     })
     
     
-def highscore(request):
-    pass
+def highscores(request, page_number=1):
+    """Show summary of all games (highscore table)."""
+    
+    highscore_iter = Game.highscore_queryset().iterator()
+    scores = [(pos + 1, game) for pos, game in enumerate(highscore_iter)]
+    paginator = Paginator(scores, 10)
+    try:
+        scores = paginator.page(page_number)
+    except InvalidPage:
+        scores = paginator.page(1)
+    
+    return render_to_response('quiz/highscores.html', {
+        'scores' : scores,
+    })
     
     
 def question(request):
@@ -74,7 +128,7 @@ def question(request):
                 'message' : 'Wrong.',
             }
         prev_result['correct'] = current_question.correct_answer
-    elif game.has_started():
+    elif game.has_started() and not game.is_game_finished():
         current_question = game.current_question()
         prev_result = {
             'class' : 'notice',

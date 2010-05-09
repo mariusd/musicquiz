@@ -32,6 +32,8 @@ body
 .notice {background:#FFF6BF;color:#514721;border-color:#FFD324;}
 .success {background:#E6EFC2;color:#264409;border-color:#C6D880;}
 
+.pagination {text-align:center;}
+
 /* Tables
 -------------------------------------------------------------- */
 
@@ -40,6 +42,7 @@ th          { font-weight: bold; }
 thead th 		{ background: #c3d9ff; }
 th,td,caption { padding: 4px 10px 4px 5px; }
 tr.even td  { background: #e5ecf9; }
+tr.highlight td  { background: #E6EFC2; }
 tfoot       { font-style: italic; }
 caption     { background: #eee; }
 
