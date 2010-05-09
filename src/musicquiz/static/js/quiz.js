@@ -7,12 +7,24 @@ var PlayerState = {
     BUFFERING : 3,
     VIDEO_CUED : 5
 };
+
+
+/* default size "425", "356" */
+var params = { allowScriptAccess: "always" };
+var atts = { id: "myytplayer" };
+swfobject.embedSWF(
+    "http://www.youtube.com/v/" + youtube_code 
+        + "?enablejsapi=1&playerapiid=ytplayer", 
+    "ytapiplayer", "0", "0", "8", null, null, params, atts
+);
+
      
 function onYouTubePlayerReady(playerId) {
     ytplayer = document.getElementById("myytplayer");
     ytplayer.addEventListener("onStateChange", "onytplayerStateChange");
     ytplayer.setVolume(100);
-    ytplayer.seekTo(30, true);
+    var position = Math.floor(Math.random() * (youtube_duration - 20 + 1));
+    ytplayer.seekTo(position, true);
 }
 
 function onytplayerStateChange(newState) {

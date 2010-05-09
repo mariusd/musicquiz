@@ -6,18 +6,13 @@
 <script type="text/javascript" src="/static/js/mootools-1.2.4.4-more.js"></script>
 <script type="text/javascript" src="/static/js/moocheck.js"></script>
 <script type="text/javascript" src="/static/js/swfobject.js"></script>
+<script type="text/javascript">
+    var youtube_code = "{{ question.correct_answer.youtube_code }}";
+    var youtube_duration = "{{ question.correct_answer.youtube_duration }}";
+</script>
 <script type="text/javascript" src="/static/js/quiz.js"></script>
 
-<script type="text/javascript">
-    /* default size "425", "356" */
-    var params = { allowScriptAccess: "always" };
-    var atts = { id: "myytplayer" };
-    swfobject.embedSWF(
-        "http://www.youtube.com/v/{{ question.correct_answer.youtube_code }}" 
-            + "?enablejsapi=1&playerapiid=ytplayer", 
-        "ytapiplayer", "0", "0", "8", null, null, params, atts
-    );
-</script>
+
 
 {% if prev_result %}
     <div id="result">
