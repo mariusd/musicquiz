@@ -1,0 +1,86 @@
+=================
+Utility functions
+=================
+
+Quiz application works with youtube.com videos, so we need a function
+which extracts youtube video code from URL:
+
+    >>> from musicquiz.quiz.utility import extract_youtube_code
+    
+    >>> simple = 'http://www.youtube.com/watch?v=qndUS3SIf1Q'
+    >>> extract_youtube_code(simple)
+    'qndUS3SIf1Q'
+    
+    >>> with_parameters = 'http://www.youtube.com/' \
+    ...     + 'watch?v=ncl7New1czM&a=RPCbU-SxEs0&playnext_from=ML'
+    >>> extract_youtube_code(with_parameters)
+    'ncl7New1czM'
+    
+    >>> player = 'http://youtube.com/v/3Ii8m1jgn_M?f=videos&app=youtube_gdata'
+    >>> extract_youtube_code(player)
+    '3Ii8m1jgn_M'
+    
+    >>> bad_url = 'http://www.youtube.com/watch?WRONG=qndUS3SIf1Q'
+    >>> extract_youtube_code(bad_url)
+    Traceback (most recent call last):
+    ...
+    ValueError: cannot extract code (wrong url?)
+    
+
+Sometimes we need to show only a certain fragment of the sequence:
+a specified object and some of the objects around it.
+For example, after the player finishes a quiz we want to show his entry
+in the highscore table along with his closest neighbours.
+
+    >>> from musicquiz.quiz.utility import create_fragment
+    
+This function was designed to be used with QuerySet so most of the tests
+in here will use iterators instead of simple lists.
+    
+Function returns the first found fragment and its starting position:
+    
+    >>> create_fragment(xrange(1, 7), obj=4, size=3)
+    ([3, 4, 5], 2)
+    
+    >>> create_fragment(xrange(1, 7), obj=3, size=1)
+    ([3], 2)
+    
+Sometimes its not possible for the specified object to be in the middle:
+    
+    >>> create_fragment(xrange(1, 7), obj=1, size=3)
+    ([1, 2, 3], 0)
+    
+    >>> create_fragment(xrange(1, 7), obj=5, size=5)
+    ([2, 3, 4, 5, 6], 1)
+    
+    >>> create_fragment(xrange(1, 7), obj=5, size=2)
+    ([5, 6], 4)
+    
+    >>> create_fragment([2, 1, 2, 1, 1, 1], obj=1, size=5)
+    ([2, 1, 2, 1, 1], 0)
+    
+    >>> create_fragment(xrange(1, 7), obj=3, size=4)
+    ([2, 3, 4, 5], 1)
+    
+If `size` parameter is bigger than the sequence, this fact is ignored and
+the maximal possible fragment is returned:
+
+    >>> create_fragment(xrange(1, 7), obj=3, size=2**10)
+    ([1, 2, 3, 4, 5, 6], 0)
+    
+On the other hand, we want to be informed about some of the other errors:
+
+    >>> create_fragment(xrange(1, 7), obj=-1, size=2)
+    Traceback (most recent call last):
+    ...
+    ValueError: specified object was not found
+    
+    >>> create_fragment([], obj=1, size=2)
+    Traceback (most recent call last):
+    ...
+    ValueError: specified object was not found
+    
+    >>> create_fragment(xrange(1, 7), obj=5, size=0)
+    Traceback (most recent call last):
+    ...
+    ValueError: size must be bigger than zero

@@ -1,7 +1,6 @@
 import unittest
 import doctest
 import musicquiz.quiz.forms
-import musicquiz.quiz.utility
 import musicquiz.quiz.views
 from django.test import TestCase
 import homophony
@@ -29,10 +28,10 @@ def suite():
     
     suite = unittest.TestSuite([
         doctest.DocTestSuite(musicquiz.quiz.forms),
-        doctest.DocTestSuite(musicquiz.quiz.utility),
         
-        doctest.DocFileSuite('test_models.txt', setUp=setUp, tearDown=tearDown),
-        doctest.DocFileSuite('test_views.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('models.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('views.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('utility.txt', setUp=setUp, tearDown=tearDown),
         
         homophony.DocFileSuite('functional.txt'),
     ])

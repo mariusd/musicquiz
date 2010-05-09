@@ -7,8 +7,7 @@ from django.core.paginator import InvalidPage
 from models import Game
 from forms import WelcomeForm
 from forms import AnswerForm
-
-import collections
+from utility import create_fragment
 
 def index(request):
     """Show index page with the welcome form."""
@@ -45,35 +44,13 @@ def stats(request):
     score = current_game.total_score()
     
     highscore_iter = Game.highscore_queryset().iterator()
+    fragment, pos = create_fragment(highscore_iter, current_game, 5)
+    indexed_games = [(pos + i + 1, game) for i, game in enumerate(fragment)]
     
-    def create_fragment(iter, obj, size):
-        fragment = collections.deque()
-        last_removed = collections.deque()
-        current_added = False
-        for index, element in enumerate(iter):
-            fragment.append((index + 1, element))
-            if element == obj:
-                current_added = True
-            if not current_added and len(fragment) == (size + 1) / 2:
-                last_removed.append(fragment.popleft())
-                if len(last_removed) > size:
-                    last_removed.popleft()
-
-            if len(fragment) == size:
-                break
-        else:
-            for removed in reversed(last_removed):
-                fragment.appendleft(removed)
-                if len(fragment) == size:
-                    break
-        return fragment
-    
-    highscore_fragment = create_fragment(highscore_iter, current_game, 5)
-        
     return render_to_response('quiz/stats.html', {
         'total_score' : score,
         'this_game' : current_game,
-        'other_scores' : highscore_fragment,
+        'other_scores' : indexed_games,
         'questions' : current_game.questions.all(),
     })
     
