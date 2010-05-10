@@ -12,9 +12,9 @@
 <h2>Highscores</h2>
 <p>You can also take a look at
 <a href="{% url musicquiz.quiz.views.highscores %}">full highscores table</a>.</p>
-<table>
-<tr>
+<table border="0" cellpadding="0" cellspacing="1">
 <thead>
+<tr>
     <th>#</th>
     <th>Player</th>
     <th>Date played</th>
@@ -25,7 +25,7 @@
 </thead>
 <tbody>
 {% for pos, game in other_scores %}
-    <tr class="{% ifequal game this_game %}highlight{% endifequal %} {% cycle 'odd' 'even' %}">
+    <tr class="{% ifequal game this_game %}highlight {% endifequal %}{% cycle 'odd' 'even' %}">
         <td>{{ pos }}.</td>
         <td>Not implemented yet</td>
         <td>{{ game.date_started|date:'Y-m-d h:i' }}</td>
@@ -39,9 +39,9 @@
 
 <h2>Details</h2>
 <p>Clicking on the name of the track opens a new window with youtube video.</p>
-<table>
-<tr>
+<table border="0" cellpadding="0" cellspacing="1">
 <thead>
+<tr>
     <th>#</th>
     <th>Correct answer</th>
     <th>Your answer</th>
