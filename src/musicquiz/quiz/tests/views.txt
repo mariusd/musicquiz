@@ -1,7 +1,8 @@
-===================
-Quiz app view tests
-===================
+======================
+Quiz application views
+======================
 
-The main purpose of these tests is to check whether view functions
-return correct context.
+To minimize the overlap between functional tests and tests for views, these
+tests should concentrate on checking whether view functions return correct
+context. Checking of rendered HTML pages is left up to functional tests.
 

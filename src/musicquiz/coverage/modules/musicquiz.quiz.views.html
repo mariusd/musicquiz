@@ -126,17 +126,17 @@
 <div id="content-header">
   <h1>
     <span id="module-name">musicquiz.quiz.views</span>:
-    31 total statements,
-    <span class="critical">45.8% covered</span>
+    68 total statements,
+    <span class="critical">14.8% covered</span>
   </h1>
-  <p>Generated: Thu 2010-05-06 01:54 FLE Daylight Time</p>
+  <p>Generated: Mon 2010-05-10 17:51 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\views.py</p>
   <p>
     Stats:
-    <span class="executed">11 executed</span>,
-    <span class="missed">13 missed</span>,
+    <span class="executed">9 executed</span>,
+    <span class="missed">52 missed</span>,
     <span class="excluded">7 excluded</span>,
-    <span class="ignored">57 ignored</span> 
+    <span class="ignored">63 ignored</span> 
   </p> 
 </div>
 
@@ -144,72 +144,101 @@
   <ol>
     <li class="excluded"><code>from django.shortcuts import render_to_response</code></li>
 <li class="excluded"><code>from django.http import HttpResponseRedirect</code></li>
+<li class="excluded"><code>from django.core.urlresolvers import reverse</code></li>
+<li class="excluded"><code>from django.core.paginator import Paginator</code></li>
+<li class="excluded"><code>from django.core.paginator import InvalidPage</code></li>
 <li class="ignored"><code></code></li>
-<li class="excluded"><code>from models import Song</code></li>
-<li class="excluded"><code>from forms import WelcomeForm</code></li>
-<li class="excluded"><code>from forms import AnswerForm</code></li>
+<li class="excluded"><code>from models import Game</code></li>
+<li class="excluded"><code>from utility import create_fragment</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>def index(request):</code></li>
-<li class="excluded"><code>    """Show index page with the welcome form.</code></li>
+<li class="ignored"><code>    """Show the index page."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; import django.test</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; from django.core.urlresolvers import reverse</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; django.test.utils.setup_test_environment()</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; c = django.test.Client()</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; index = reverse('musicquiz.quiz.views.index')</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response = c.get(index)</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response.status_code</code></li>
-<li class="ignored"><code>    200</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response.context['form'] #doctest: +ELLIPSIS</code></li>
-<li class="ignored"><code>    &lt;musicquiz.quiz.forms.WelcomeForm object at ...&gt;</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>    # Submitting a correct name causes a redirect</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response = c.post(index, { 'name' : 'Mr. User Name' })</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response.status_code</code></li>
-<li class="ignored"><code>    302</code></li>
-<li class="ignored"><code>    """</code></li>
 <li class="executed"><code>    if request.method == 'POST':</code></li>
-<li class="executed"><code>        form = WelcomeForm(request.POST)</code></li>
-<li class="executed"><code>        if form.is_valid():</code></li>
-<li class="executed"><code>            request.session['username'] = form.cleaned_data['name']</code></li>
-<li class="executed"><code>            return HttpResponseRedirect('question/')</code></li>
+<li class="missed"><code>        question_url = reverse('musicquiz.quiz.views.question')</code></li>
+<li class="missed"><code>        return new_game(request)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    if 'game' in request.session.keys():</code></li>
+<li class="missed"><code>        current_game = request.session['game']</code></li>
 <li class="ignored"><code>    else:</code></li>
-<li class="executed"><code>        form = WelcomeForm()</code></li>
+<li class="executed"><code>        current_game = None</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>    return render_to_response('quiz/index.html', {</code></li>
-<li class="ignored"><code>        'form' : form,</code></li>
+<li class="ignored"><code>        'current_game' : current_game,</code></li>
 <li class="ignored"><code>    })</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>def show_question(request):</code></li>
-<li class="excluded"><code>    """Show a randomly chosen question to the visitor.</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; import django.test</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; from django.core.urlresolvers import reverse</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; django.test.utils.setup_test_environment()</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; c = django.test.Client()</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; question = reverse('musicquiz.quiz.views.show_question')</code></li>
+<li class="executed"><code>def new_game(request):</code></li>
+<li class="ignored"><code>    """Start new game."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    # Anonymous visitors are redirected back to index page</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response = c.get(question)</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; response.status_code</code></li>
-<li class="ignored"><code>    302</code></li>
+<li class="missed"><code>    request.session['game'] = Game.objects.create(quiz_length=10)</code></li>
+<li class="missed"><code>    question_url = reverse('musicquiz.quiz.views.question')</code></li>
+<li class="missed"><code>    return HttpResponseRedirect(question_url)</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; index = reverse('musicquiz.quiz.views.index')</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    # Tests need data</code></li>
-<li class="ignored"><code>    #&gt;&gt;&gt; response = c.post(index, { 'name' : 'Mr. Foo Bar' }, follow=True)</code></li>
+<li class="executed"><code>def stats(request):</code></li>
+<li class="ignored"><code>    """Show stats of the currently going (or finished) game."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    if 'game' not in request.session.keys():</code></li>
+<li class="missed"><code>        return HttpResponseRedirect(reverse('musicquiz.quiz.views.index'))</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    current_game = request.session['game']</code></li>
+<li class="missed"><code>    score = current_game.total_score()</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    highscore_iter = Game.highscore_queryset().iterator()</code></li>
+<li class="missed"><code>    fragment, pos = create_fragment(highscore_iter, current_game, 5)</code></li>
+<li class="missed"><code>    indexed_games = [(pos + i + 1, game) for i, game in enumerate(fragment)]</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    return render_to_response('quiz/stats.html', {</code></li>
+<li class="ignored"><code>        'total_score' : score,</code></li>
+<li class="ignored"><code>        'this_game' : current_game,</code></li>
+<li class="ignored"><code>        'other_scores' : indexed_games,</code></li>
+<li class="ignored"><code>        'questions' : current_game.questions.all(),</code></li>
+<li class="ignored"><code>    })</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>def highscores(request, page_number=1):</code></li>
+<li class="ignored"><code>    """Show summary of all games (highscore table)."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    highscore_iter = Game.highscore_queryset().iterator()</code></li>
+<li class="missed"><code>    scores = [(pos + 1, game) for pos, game in enumerate(highscore_iter)]</code></li>
+<li class="missed"><code>    paginator = Paginator(scores, 10)</code></li>
+<li class="missed"><code>    try:</code></li>
+<li class="missed"><code>        scores = paginator.page(page_number)</code></li>
+<li class="missed"><code>    except InvalidPage:</code></li>
+<li class="missed"><code>        scores = paginator.page(1)</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    return render_to_response('quiz/highscores.html', {</code></li>
+<li class="ignored"><code>        'scores' : scores,</code></li>
+<li class="ignored"><code>    })</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>def question(request):</code></li>
+<li class="ignored"><code>    """Handle player's submitted answer, then select the next question</code></li>
+<li class="ignored"><code>    and show it to the player. If there are no more questions, visitor</code></li>
+<li class="ignored"><code>    is redirected to the stats page.</code></li>
 <li class="ignored"><code>    """</code></li>
-<li class="executed"><code>    if 'username' not in request.session.keys():</code></li>
-<li class="executed"><code>        return HttpResponseRedirect('/quiz/')</code></li>
 <li class="ignored"><code></code></li>
-<li class="missed"><code>    prev_result = None</code></li>
-<li class="missed"><code>    if request.method == 'POST' and 'current_song' in request.session.keys():</code></li>
-<li class="missed"><code>        current = request.session['current_song']</code></li>
-<li class="missed"><code>        if request.POST['timeout_flag'] == 'true':</code></li>
+<li class="missed"><code>    if 'game' not in request.session.keys():</code></li>
+<li class="missed"><code>        return HttpResponseRedirect(reverse('musicquiz.quiz.views.index'))</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    game = request.session['game']</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    if request.method == 'POST':</code></li>
+<li class="missed"><code>        current_question = game.current_question()</code></li>
+<li class="missed"><code>        guess_data = { }</code></li>
+<li class="missed"><code>        remaining_time = float(request.POST['remaining_time'])</code></li>
+<li class="missed"><code>        guess_data['remaining_time'] = remaining_time</code></li>
+<li class="missed"><code>        if 'answer' in request.POST.keys():</code></li>
+<li class="missed"><code>            guess_data['answer'] = int(request.POST['answer'])</code></li>
+<li class="missed"><code>        current_question.make_guess(guess_data)</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>        if current_question.is_timeout():</code></li>
 <li class="missed"><code>            prev_result = {</code></li>
 <li class="ignored"><code>                'class' : 'error',</code></li>
 <li class="ignored"><code>                'message' : 'Time is up.',</code></li>
 <li class="ignored"><code>            }</code></li>
-<li class="missed"><code>        elif request.POST['answer'] == str(current.pk):</code></li>
+<li class="missed"><code>        elif current_question.answered_correctly():</code></li>
 <li class="missed"><code>            prev_result = {</code></li>
 <li class="ignored"><code>                'class' : 'success',</code></li>
 <li class="ignored"><code>                'message' : 'Congratulations! You have answered correctly!',</code></li>
@@ -217,18 +246,32 @@
 <li class="ignored"><code>        else:</code></li>
 <li class="missed"><code>            prev_result = {</code></li>
 <li class="ignored"><code>                'class' : 'error',</code></li>
-<li class="ignored"><code>                'message' : 'Your answer was incorrect.',</code></li>
+<li class="ignored"><code>                'message' : 'Wrong.',</code></li>
 <li class="ignored"><code>            }</code></li>
+<li class="missed"><code>        prev_result['correct'] = current_question.correct_answer</code></li>
+<li class="missed"><code>    elif game.has_started() and not game.is_game_finished():</code></li>
+<li class="missed"><code>        current_question = game.current_question()</code></li>
+<li class="missed"><code>        prev_result = {</code></li>
+<li class="ignored"><code>            'class' : 'notice',</code></li>
+<li class="ignored"><code>            'message' : 'Question was skipped.',</code></li>
+<li class="ignored"><code>        }</code></li>
+<li class="missed"><code>        prev_result['correct'] = current_question.correct_answer</code></li>
+<li class="missed"><code>        current_question.skip_question()</code></li>
+<li class="ignored"><code>    else:</code></li>
+<li class="missed"><code>        prev_result = None</code></li>
 <li class="ignored"><code></code></li>
-<li class="missed"><code>    song = Song.pick_random()</code></li>
-<li class="missed"><code>    request.session['current_song'] = song</code></li>
-<li class="missed"><code>    possible_answers = song.get_possible_answers(count=8)</code></li>
-<li class="missed"><code>    choices = [(item.pk, item.get_label()) for item in possible_answers]</code></li>
+<li class="missed"><code>    if game.is_game_finished():</code></li>
+<li class="missed"><code>        game_history_url = reverse('musicquiz.quiz.views.stats')</code></li>
+<li class="missed"><code>        return HttpResponseRedirect(game_history_url)</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    next_question = game.next_question()</code></li>
+<li class="missed"><code>    possible_answers = next_question.get_choices()</code></li>
+<li class="missed"><code>    choices = [(item.pk, unicode(item)) for item in possible_answers]</code></li>
 <li class="missed"><code>    return render_to_response('quiz/question.html', {</code></li>
 <li class="ignored"><code>        'choices' : choices,</code></li>
-<li class="ignored"><code>        'song' : song,</code></li>
+<li class="ignored"><code>        'length' : game.quiz_length,</code></li>
+<li class="ignored"><code>        'question' : next_question,</code></li>
 <li class="ignored"><code>        'prev_result' : prev_result,</code></li>
-<li class="ignored"><code>        'name' : request.session['username'],</code></li>
 <li class="ignored"><code>    })</code></li>
   </ol>
 </div>

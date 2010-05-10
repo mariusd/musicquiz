@@ -127,25 +127,23 @@
 <div id="content-header">
   <h1>
     <span id="module-name">musicquiz.quiz.models</span>:
-    114 total statements,
-    <span class="normal">93.6% covered</span>
+    158 total statements,
+    <span class="normal">97.2% covered</span>
   </h1>
-  <p>Generated: Thu 2010-05-06 01:54 FLE Daylight Time</p>
+  <p>Generated: Mon 2010-05-10 17:51 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\models.py</p>
   <p>
     Stats:
-    <span class="executed">88 executed</span>,
-    <span class="missed">6 missed</span>,
-    <span class="excluded">20 excluded</span>,
-    <span class="ignored">194 ignored</span> 
+    <span class="executed">137 executed</span>,
+    <span class="missed">4 missed</span>,
+    <span class="excluded">17 excluded</span>,
+    <span class="ignored">137 ignored</span> 
   </p> 
 </div>
 
 <div id="source-listing">
   <ol>
-    <li class="ignored"><code>#-*- coding: utf8 -*-</code></li>
-<li class="ignored"><code></code></li>
-<li class="excluded"><code>from django.db import models</code></li>
+    <li class="excluded"><code>from django.db import models</code></li>
 <li class="excluded"><code>from django.db import IntegrityError</code></li>
 <li class="excluded"><code>from django.conf import settings</code></li>
 <li class="excluded"><code>from utility import extract_youtube_code</code></li>
@@ -155,302 +153,291 @@
 <li class="excluded"><code>import random</code></li>
 <li class="excluded"><code>import urllib</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code># Create your models here.</code></li>
+<li class="executed"><code>EPSILON = 1e-9</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>class Song(models.Model):</code></li>
-<li class="ignored"><code>    """Song model responsible for fetching data from web and storing it.</code></li>
+<li class="executed"><code>class Error(Exception):</code></li>
+<li class="ignored"><code>    """Base class for exceptions in this module."""</code></li>
+<li class="executed"><code>    pass</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; song = Song.objects.create(artist='Artist', title='Title')</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; unicode(song) #doctest: +ELLIPSIS</code></li>
-<li class="ignored"><code>    u'...'</code></li>
+<li class="executed"><code>class QuizModelError(Error):</code></li>
+<li class="ignored"><code>    """Exception class.</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    # Initially youtube code and similar songs are not set</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; song.youtube_code is None</code></li>
-<li class="ignored"><code>    True</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; song.similar.all()</code></li>
-<li class="ignored"><code>    []</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt;</code></li>
+<li class="ignored"><code>    New exception classes may be declared in the future for some special</code></li>
+<li class="ignored"><code>    situations in this module, but for now all errors use this class.</code></li>
 <li class="ignored"><code>    """</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    artist = models.CharField(max_length=256)</code></li>
+<li class="executed"><code>    def __init__(self, value):</code></li>
+<li class="executed"><code>        self.value = value</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def __str__(self):</code></li>
+<li class="executed"><code>        return repr(self.value)</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code># Create your models here.</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>class Artist(models.Model):</code></li>
+<li class="ignored"><code>    """Artist model class."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    name = models.CharField(max_length=128)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def fetch_similar(self):</code></li>
+<li class="ignored"><code>        """Fetch similar artists from last.fm database."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>        pass</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def fetch_tracks(self):</code></li>
+<li class="ignored"><code>        """Fetch the titles of artist's tracks from last.fm."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>        pass</code></li>
+<li class="ignored"><code></code></li>
+<li class="excluded"><code>    def __unicode__(self):</code></li>
+<li class="excluded"><code>        return u'%s' % (self.name)</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>class Track(models.Model):</code></li>
+<li class="ignored"><code>    """Track model class."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    artist = models.ForeignKey(Artist)</code></li>
 <li class="executed"><code>    title = models.CharField(max_length=256)</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>    youtube_code = models.CharField(max_length=20, null=True, blank=True)</code></li>
-<li class="executed"><code>    similar = models.ManyToManyField('self', through='SongSimilarity',</code></li>
-<li class="ignored"><code>                                     symmetrical=False)</code></li>
+<li class="executed"><code>    youtube_duration = models.IntegerField(null=True, blank=True)</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def create_similarity(self, similar, match):</code></li>
-<li class="ignored"><code>        """Create similarity between songs.</code></li>
+<li class="executed"><code>    @staticmethod</code></li>
+<li class="executed"><code>    def pick_random(exclude=[]):</code></li>
+<li class="ignored"><code>        """Pick a random track which is not in the exclude list.</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        Parameter `match` is a float value which tells how</code></li>
-<li class="ignored"><code>        similar the two songs are. This method must be used</code></li>
-<li class="ignored"><code>        to ensure symmetrical relationship.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a = Song.objects.create(artist='A', title='a')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b = Song.objects.create(artist='B', title='b')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.similar.all()</code></li>
-<li class="ignored"><code>        []</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b.similar.all()</code></li>
-<li class="ignored"><code>        []</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.create_similarity(b, 42)</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.create_similarity(b, 0)</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        IntegrityError: columns first_id, second_id are not unique</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b in a.similar.all()</code></li>
-<li class="ignored"><code>        True</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a in b.similar.all()</code></li>
-<li class="ignored"><code>        True</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b in a.similar.filter(songsimilarity__match=42)</code></li>
-<li class="ignored"><code>        True</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b in a.similar.filter(songsimilarity__match=43)</code></li>
-<li class="ignored"><code>        False</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.delete()</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b.similar.all()</code></li>
-<li class="ignored"><code>        []</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b.create_similarity(b, 1)</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        ValueError: song cannot be similar to itself</code></li>
+<li class="ignored"><code>        Returned track is guaranteed to have youtube code and duration.</code></li>
 <li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        if self == similar:</code></li>
-<li class="executed"><code>            raise ValueError('song cannot be similar to itself')</code></li>
-<li class="executed"><code>        SongSimilarity.objects.create(first=self, second=similar, match=match)</code></li>
-<li class="executed"><code>        SongSimilarity.objects.create(first=similar, second=self, match=match)</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def remove_similarity(self, similar):</code></li>
-<li class="ignored"><code>        """Remove similarity between songs.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        This method must be used to ensure symmetrical relationship.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a = Song.objects.create(artist='A', title='a')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b = Song.objects.create(artist='B', title='b')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.create_similarity(b, 1)</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b in a.similar.all()</code></li>
-<li class="ignored"><code>        True</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b.remove_similarity(a)</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b in a.similar.all()</code></li>
-<li class="ignored"><code>        False</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; b.remove_similarity(a)</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        ValueError: songs are not similar</code></li>
-<li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        if similar not in self.similar.all():</code></li>
-<li class="executed"><code>            raise ValueError('songs are not similar')</code></li>
-<li class="executed"><code>        self.songsimilarity_set.filter(second=similar)[0].delete()</code></li>
-<li class="executed"><code>        similar.songsimilarity_set.filter(second=self)[0].delete()</code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>    def fetch_similar(self, limit=10):</code></li>
-<li class="ignored"><code>        """Fetch a list or similar songs and save them in the database.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        Returns the count of newly added similar songs.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        # TODO make this method work faster</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a = Song.objects.create(artist='a', title='a')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.fetch_similar(limit=-1)</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        ValueError: limit must be a positive integer</code></li>
-<li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        if limit &lt; 0:</code></li>
-<li class="executed"><code>            raise ValueError('limit must be a positive integer')</code></li>
-<li class="executed"><code>        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)</code></li>
-<li class="executed"><code>        track = network.get_track(self.artist, self.title)</code></li>
-<li class="executed"><code>        similar = track.get_similar()</code></li>
-<li class="executed"><code>        new_songs = 0</code></li>
-<li class="executed"><code>        for track in similar[:limit]:</code></li>
-<li class="executed"><code>            name = track.item.artist.name</code></li>
-<li class="executed"><code>            title = track.item.title</code></li>
-<li class="executed"><code>            obj, flag = Song.objects.get_or_create(artist=name, title=title)</code></li>
-<li class="executed"><code>            try:</code></li>
-<li class="executed"><code>                self.create_similarity(obj, track.match)</code></li>
-<li class="missed"><code>            except IntegrityError, e:</code></li>
-<li class="missed"><code>                pass</code></li>
+<li class="executed"><code>        exclude_pks = [track.pk for track in exclude]</code></li>
+<li class="executed"><code>        try:</code></li>
+<li class="executed"><code>            track = random.choice(Track.objects.exclude(pk__in=exclude_pks))</code></li>
+<li class="executed"><code>        except IndexError, e:</code></li>
+<li class="executed"><code>            raise ValueError('could not pick any track')</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="executed"><code>            if not track.has_youtube_info():</code></li>
+<li class="executed"><code>                track.update_youtube_info()</code></li>
+<li class="executed"><code>            if track.has_youtube_info():</code></li>
+<li class="executed"><code>                return track</code></li>
 <li class="ignored"><code>            else:</code></li>
-<li class="executed"><code>                new_songs += 1</code></li>
-<li class="executed"><code>        return new_songs</code></li>
+<li class="missed"><code>                return Track.pick_random(exclude=exclude + [track])</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def update_youtube_code(self):</code></li>
-<li class="ignored"><code>        u"""Find video for a song and update youtube code field.</code></li>
+<li class="executed"><code>    def has_youtube_info(self):</code></li>
+<li class="ignored"><code>        """Check if track has all required info about its youtube video."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        # TODO move this method to utility.py?</code></li>
+<li class="executed"><code>        youtube_info = [self.youtube_code, self.youtube_duration]</code></li>
+<li class="executed"><code>        return all(field is not None for field in youtube_info)</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song = Song(artist='Faithless', title='Insomnia')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song.update_youtube_code()</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song.youtube_code</code></li>
-<li class="ignored"><code>        'tBrUjvONIrA'</code></li>
+<li class="executed"><code>    def update_youtube_info(self):</code></li>
+<li class="ignored"><code>        """Find youtube video for the track and update youtube info fields."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        # This method handles unicode names properly</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; godzilla = Song(artist=u'Blue Öyster Cult', title=u'Godzilla')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; godzilla.update_youtube_code()</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; godzilla.youtube_code</code></li>
-<li class="ignored"><code>        'k6rDWqjnW7w'</code></li>
-<li class="ignored"><code>        """</code></li>
 <li class="executed"><code>        service = gdata.youtube.service.YouTubeService()</code></li>
 <li class="executed"><code>        query = gdata.youtube.service.YouTubeVideoQuery()</code></li>
 <li class="executed"><code>        query_string = u'%s %s' % (self.artist, self.title)</code></li>
 <li class="executed"><code>        query.vq = query_string.encode('utf-8')</code></li>
 <li class="executed"><code>        feed = service.YouTubeQuery(query)</code></li>
 <li class="executed"><code>        if len(feed.entry) &gt; 0:</code></li>
-<li class="executed"><code>            url = feed.entry[0].GetSwfUrl()</code></li>
+<li class="executed"><code>            entry = feed.entry[0]</code></li>
+<li class="executed"><code>            url = entry.GetSwfUrl()</code></li>
 <li class="executed"><code>            if url:</code></li>
-<li class="executed"><code>                youtube_code = extract_youtube_code(url)</code></li>
-<li class="executed"><code>                self.youtube_code = youtube_code</code></li>
+<li class="executed"><code>                self.youtube_code = extract_youtube_code(url)</code></li>
+<li class="executed"><code>                self.youtube_duration = entry.media.duration.seconds</code></li>
 <li class="executed"><code>                self.save()</code></li>
-<li class="ignored"><code>        else:</code></li>
-<li class="ignored"><code>            # No youtube video was found, raise an exception?</code></li>
-<li class="executed"><code>            pass</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    @staticmethod</code></li>
-<li class="executed"><code>    def pick_random(exclude=[]):</code></li>
-<li class="ignored"><code>        """Pick a random song which is not in the exclude list.</code></li>
+<li class="executed"><code>    def fetch_similar(self, limit=None):</code></li>
+<li class="ignored"><code>        """Fetch a list or similar tracks and save them in the database.</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        Returned song is guaranteed to have youtube code.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        # Lets create a song to make sure database is not empty</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a = Song(artist='a', title='a', youtube_code='a')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.save()</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; Song.pick_random().youtube_code is not None</code></li>
-<li class="ignored"><code>        True</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; Song.pick_random(exclude=Song.objects.all())</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        ValueError: could not pick any song</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; a.delete()</code></li>
+<li class="ignored"><code>        Returns the count of newly added tracks.</code></li>
 <li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        exclude_pks = [song.pk for song in exclude]</code></li>
-<li class="executed"><code>        try:</code></li>
-<li class="executed"><code>            song = random.choice(Song.objects.exclude(pk__in=exclude_pks))</code></li>
-<li class="executed"><code>        except IndexError, e:</code></li>
-<li class="executed"><code>            raise ValueError('could not pick any song')</code></li>
-<li class="ignored"><code>        else:</code></li>
-<li class="executed"><code>            if song.youtube_code is None:</code></li>
-<li class="missed"><code>                song.update_youtube_code()</code></li>
-<li class="executed"><code>            if song.youtube_code is not None:</code></li>
-<li class="executed"><code>                return song</code></li>
-<li class="ignored"><code>            else:</code></li>
-<li class="missed"><code>                return Song.pick_random(exclude=exclude + [song])</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def get_possible_answers(self, count=5):</code></li>
-<li class="ignored"><code>        """Return a list of random possible answers.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song = Song(artist='Radiohead', title='Karma Police')</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song.save()</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        # Correct answer must be one of the possible answers</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; [song in song.get_possible_answers() for i in range(5)]</code></li>
-<li class="ignored"><code>        [True, True, True, True, True]</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song.get_possible_answers(count=0)</code></li>
-<li class="ignored"><code>        Traceback (most recent call last):</code></li>
-<li class="ignored"><code>        ...</code></li>
-<li class="ignored"><code>        ValueError: there must be at least one answer</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; song.delete()</code></li>
-<li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        if count &lt; 1:</code></li>
-<li class="executed"><code>            raise ValueError('there must be at least one answer')</code></li>
-<li class="executed"><code>        total = self.similar.count()</code></li>
-<li class="executed"><code>        if total &lt; count - 1:</code></li>
-<li class="executed"><code>            self.fetch_similar(count)</code></li>
-<li class="executed"><code>            total = self.similar.count()</code></li>
-<li class="executed"><code>        query = self.similar.exclude(pk__in=[self.pk])</code></li>
-<li class="executed"><code>        answers = random.sample(query, min([total, count]) - 1)</code></li>
-<li class="executed"><code>        answers += [self]</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        # If there are still not enough answers, put some random songs</code></li>
-<li class="executed"><code>        while len(answers) &lt; count:</code></li>
-<li class="missed"><code>            answers.append(Song.pick_random(exclude=answers))</code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>        random.shuffle(answers)</code></li>
-<li class="executed"><code>        return answers</code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>    def get_label(self):</code></li>
-<li class="ignored"><code>        """Return the name of song, which will be shown to the visitor.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>        # Not the most meaningful test case..</code></li>
-<li class="ignored"><code>        &gt;&gt;&gt; Song(artist='The Knife', title='Heartbeats').get_label()</code></li>
-<li class="ignored"><code>        u'The Knife \u2013 Heartbeats'</code></li>
-<li class="ignored"><code>        """</code></li>
-<li class="executed"><code>        return u'%s \u2013 %s' % (self.artist, self.title)</code></li>
+<li class="executed"><code>        if limit is not None and limit &lt; 0:</code></li>
+<li class="executed"><code>            raise ValueError('limit must be a positive integer')</code></li>
+<li class="executed"><code>        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)</code></li>
+<li class="executed"><code>        lastfm_track = network.get_track(unicode(self.artist), self.title)</code></li>
+<li class="executed"><code>        similar = lastfm_track.get_similar()</code></li>
+<li class="executed"><code>        new_songs = 0</code></li>
+<li class="executed"><code>        if limit is not None:</code></li>
+<li class="executed"><code>            similar = similar[:limit]</code></li>
+<li class="executed"><code>        for similar_track in similar:</code></li>
+<li class="executed"><code>            artist_name = similar_track.item.artist.name</code></li>
+<li class="executed"><code>            title = similar_track.item.title</code></li>
+<li class="executed"><code>            artist, _ = Artist.objects.get_or_create(name=artist_name)</code></li>
+<li class="executed"><code>            result = Track.objects.get_or_create(artist=artist, title=title)</code></li>
+<li class="executed"><code>            if result[1]:</code></li>
+<li class="executed"><code>                new_songs += 1</code></li>
+<li class="executed"><code>        return new_songs</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>    def __unicode__(self):</code></li>
-<li class="excluded"><code>        """Return a string representation mainly for debugging."""</code></li>
-<li class="excluded"><code>        return u'%s -- %s (%s)' % (self.artist, self.title, self.youtube_code)</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>class SongSimilarity(models.Model):</code></li>
-<li class="ignored"><code>    """Intermediate model class to store the similarities of songs.</code></li>
-<li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; a = Song(artist='A', title='T')</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; b = Song(artist='B', title='T')</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; similarity = SongSimilarity(first=a, second=b, match=1)</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; unicode(similarity) #doctest: +ELLIPSIS</code></li>
-<li class="ignored"><code>    u'...'</code></li>
-<li class="ignored"><code>    """</code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>    first = models.ForeignKey(Song)</code></li>
-<li class="executed"><code>    second = models.ForeignKey(Song, related_name='similar_songs')</code></li>
-<li class="executed"><code>    match = models.FloatField(null=True, blank=True)</code></li>
-<li class="ignored"><code></code></li>
-<li class="executed"><code>    class Meta:</code></li>
-<li class="executed"><code>        unique_together = (('first', 'second'),)</code></li>
-<li class="ignored"><code></code></li>
-<li class="excluded"><code>    def __unicode__(self):</code></li>
-<li class="excluded"><code>        """Return a string representation mainly for debugging."""</code></li>
-<li class="excluded"><code>        return u'%s &lt;-&gt; %s (%f)' % (self.first, self.second, self.match)</code></li>
+<li class="excluded"><code>        return u'%s \u2013 %s' % (self.artist, self.title)</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>class Question(models.Model):</code></li>
-<li class="ignored"><code>    """Model class for quiz question.</code></li>
+<li class="ignored"><code>    """Quiz question model class."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; q = Question(answer=Song(artist='A', title='T'))</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; unicode(q) #doctest: +ELLIPSIS</code></li>
-<li class="ignored"><code>    u'...'</code></li>
-<li class="ignored"><code>    &gt;&gt;&gt; q.total_answers, q.correct_answers</code></li>
-<li class="ignored"><code>    (0, 0)</code></li>
-<li class="ignored"><code>    """</code></li>
+<li class="executed"><code>    QUESTION_STATES = (</code></li>
+<li class="ignored"><code>        ('NOANSWER', 'Not answered'),</code></li>
+<li class="ignored"><code>        ('ANSWERED', 'Submitted'),</code></li>
+<li class="ignored"><code>        ('TIMEOUT', 'Timeout'),</code></li>
+<li class="ignored"><code>        ('SKIPPED', 'Skipped'),</code></li>
+<li class="ignored"><code>        ('REPORTED', 'Reported as bad'),</code></li>
+<li class="ignored"><code>    )</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    answer = models.ForeignKey(Song)</code></li>
-<li class="executed"><code>    choices = models.ManyToManyField(Song, related_name='in_answer')</code></li>
+<li class="executed"><code>    game = models.ForeignKey('Game', related_name='questions')</code></li>
+<li class="executed"><code>    number = models.IntegerField()</code></li>
+<li class="executed"><code>    state = models.CharField(max_length=8,</code></li>
+<li class="ignored"><code>                choices=QUESTION_STATES, default='NOANSWER')</code></li>
+<li class="executed"><code>    correct_answer = models.ForeignKey(Track, related_name='in_question')</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    total_answers = models.IntegerField(default=0)</code></li>
-<li class="executed"><code>    correct_answers = models.IntegerField(default=0)</code></li>
+<li class="executed"><code>    points = models.FloatField(null=True, blank=True)</code></li>
+<li class="executed"><code>    given_answer = models.ForeignKey(Track, null=True, blank=True)</code></li>
+<li class="executed"><code>    remaining_time = models.FloatField(null=True, blank=True)</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def make_guess(self, song):</code></li>
-<li class="missed"><code>        pass</code></li>
+<li class="executed"><code>    def is_answered(self):</code></li>
+<li class="ignored"><code>        """Check if the user has reacted in some way to the question."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return self.state != 'NOANSWER'</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def answered_correctly(self):</code></li>
+<li class="ignored"><code>        """Check if the question was answered correctly."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return self.correct_answer == self.given_answer</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def make_guess(self, guess):</code></li>
+<li class="ignored"><code>        """Try to guess the answer.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        Dictionary `guess` must contain 'answer' and 'remaining_time' keys.</code></li>
+<li class="ignored"><code>        """</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        self.remaining_time = guess['remaining_time']</code></li>
+<li class="executed"><code>        if 'answer' in guess.keys():</code></li>
+<li class="executed"><code>            given_answer = Track.objects.get(id=guess['answer'])</code></li>
+<li class="executed"><code>            self.given_answer = given_answer</code></li>
+<li class="executed"><code>        if abs(self.remaining_time) &gt; EPSILON:</code></li>
+<li class="executed"><code>            self.state = 'ANSWERED'</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="executed"><code>            self.state = 'TIMEOUT'</code></li>
+<li class="executed"><code>        self.calculate_points()</code></li>
+<li class="executed"><code>        self.save()</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def calculate_points(self):</code></li>
+<li class="ignored"><code>        """Recalculate the question point field and return its value."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if self.answered_correctly():</code></li>
+<li class="executed"><code>            self.points = self.remaining_time</code></li>
+<li class="executed"><code>        elif self.state == 'ANSWERED' and not self.answered_correctly():</code></li>
+<li class="executed"><code>            self.points = -10</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="executed"><code>            self.points = 0</code></li>
+<li class="executed"><code>        self.save()</code></li>
+<li class="executed"><code>        return self.points</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def skip_question(self):</code></li>
+<li class="ignored"><code>        """Skip question."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        self.given_answer = None</code></li>
+<li class="executed"><code>        self.remaining_time = None</code></li>
+<li class="executed"><code>        self.state = 'SKIPPED'</code></li>
+<li class="executed"><code>        self.calculate_points()</code></li>
+<li class="executed"><code>        self.save()</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def is_timeout(self):</code></li>
+<li class="ignored"><code>        """Check if the question was answered in time."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return self.state == 'TIMEOUT'</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def get_choices(self, count=8):</code></li>
+<li class="ignored"><code>        """Return a list of randomly selected possible answers.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        Correct answer is always one of the possible choices, but</code></li>
+<li class="ignored"><code>        other tracks in the list are very likely to be different</code></li>
+<li class="ignored"><code>        each time this method gets called.</code></li>
+<li class="ignored"><code>        """</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if count &lt; 1:</code></li>
+<li class="executed"><code>            raise ValueError('there must be at least one answer')</code></li>
+<li class="executed"><code>        query = Track.objects.exclude(pk__in=[self.correct_answer.pk])</code></li>
+<li class="executed"><code>        choices = random.sample(query, count - 1) + [self.correct_answer]</code></li>
+<li class="executed"><code>        random.shuffle(choices)</code></li>
+<li class="executed"><code>        return choices</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>    def __unicode__(self):</code></li>
-<li class="excluded"><code>        """Return a string representation mainly for debugging."""</code></li>
-<li class="excluded"><code>        return u'%s' % (self.answer)</code></li>
+<li class="excluded"><code>        return u'%s %s. %s' % (self.game, self.number, self.correct_answer)</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>def suite():</code></li>
-<li class="ignored"><code>    """Construct test suite for this module.</code></li>
+<li class="executed"><code>class Game(models.Model):</code></li>
+<li class="ignored"><code>    """Quiz game model class."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>    This ensures that proper initialization and cleanup will be</code></li>
-<li class="ignored"><code>    performed before and after executing doctests in this module.</code></li>
-<li class="ignored"><code>    """</code></li>
+<li class="executed"><code>    quiz_length = models.IntegerField()</code></li>
+<li class="executed"><code>    date_started = models.DateTimeField(auto_now_add=True)</code></li>
 <li class="ignored"><code></code></li>
-<li class="excluded"><code>    import musicquiz.quiz.tests.wsgi_test_app as wsgi_test_app</code></li>
+<li class="executed"><code>    def next_question(self):</code></li>
+<li class="ignored"><code>        """Create and return next question for the game."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def setUp(doctest):</code></li>
-<li class="ignored"><code>        """Redirect all web API calls to the local WSGI application.</code></li>
+<li class="executed"><code>        if self.is_game_finished():</code></li>
+<li class="executed"><code>            raise QuizModelError('game is already over')</code></li>
+<li class="executed"><code>        seen_tracks = [q.correct_answer for q in self.questions.all()]</code></li>
+<li class="executed"><code>        answer = Track.pick_random(exclude=seen_tracks)</code></li>
+<li class="executed"><code>        number = self.questions.count() + 1</code></li>
+<li class="executed"><code>        question = Question.objects.create(game=self,</code></li>
+<li class="ignored"><code>                        correct_answer=answer, number=number)</code></li>
+<li class="executed"><code>        return question</code></li>
 <li class="ignored"><code></code></li>
-<li class="ignored"><code>        This method is called for each doctest, which is not very good."""</code></li>
-<li class="executed"><code>        wsgi_test_app.redirect('gdata.youtube.com')</code></li>
-<li class="executed"><code>        wsgi_test_app.redirect('ws.audioscrobbler.com')</code></li>
+<li class="executed"><code>    @staticmethod</code></li>
+<li class="ignored"><code>    def highscore_queryset():</code></li>
+<li class="ignored"><code>        """Return the QuerySet for the list of top scorers.</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def tearDown(doctest):</code></li>
-<li class="ignored"><code>        """Remove wsgi_interceptions."""</code></li>
-<li class="executed"><code>        wsgi_test_app.remove_redirect('gdata.youtube.com')</code></li>
-<li class="executed"><code>        wsgi_test_app.remove_redirect('ws.audioscrobbler.com')</code></li>
+<li class="ignored"><code>        If two players have equal scores, the newer one is rated better.</code></li>
+<li class="ignored"><code>        This is needed to eliminate the possibility that a player makes</code></li>
+<li class="ignored"><code>        a perfect score and then stays in the first position forever.</code></li>
+<li class="ignored"><code>        """</code></li>
 <li class="ignored"><code></code></li>
-<li class="excluded"><code>    import doctest</code></li>
-<li class="executed"><code>    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)</code></li>
+<li class="missed"><code>        return Game.objects.annotate(score=models.Sum('questions__points')) \</code></li>
+<li class="ignored"><code>                .order_by('-score', '-date_started')</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def total_score(self):</code></li>
+<li class="ignored"><code>        """Return total score."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return sum(q.calculate_points() for q in self.questions.all())</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def correct_answers(self):</code></li>
+<li class="ignored"><code>        """Return the number of correctly in time answered questions."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return sum(1 for q in self.questions.all()</code></li>
+<li class="ignored"><code>                        if q.answered_correctly() and not q.is_timeout())</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def has_started(self):</code></li>
+<li class="ignored"><code>        """Check if the game has started.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        The game starts when user requests the first question.</code></li>
+<li class="ignored"><code>        """</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return self.questions.count() != 0</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def current_question(self):</code></li>
+<li class="ignored"><code>        """Return current question."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if not self.has_started():</code></li>
+<li class="executed"><code>            raise QuizModelError('game has not started')</code></li>
+<li class="executed"><code>        return self.questions.order_by('-number')[0]</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def remaining_questions(self):</code></li>
+<li class="ignored"><code>        """Return the number of remaining questions."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        return self.quiz_length - self.questions.all().count()</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    def is_game_finished(self):</code></li>
+<li class="ignored"><code>        """Check if the game has already finished."""</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if not self.questions.count():</code></li>
+<li class="executed"><code>            return False</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        last_question_answered = self.current_question().is_answered()</code></li>
+<li class="executed"><code>        all_questions_shown = self.questions.count() == self.quiz_length</code></li>
+<li class="executed"><code>        return all_questions_shown and last_question_answered</code></li>
+<li class="ignored"><code></code></li>
+<li class="excluded"><code>    def __unicode__(self):</code></li>
+<li class="excluded"><code>        return u'#%d' % (self.id)</code></li>
   </ol>
 </div>
 

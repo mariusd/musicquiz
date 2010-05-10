@@ -154,10 +154,8 @@ class Question(models.Model):
         return self.state != 'NOANSWER'
         
     def answered_correctly(self):
-        """Check if the question was answered correctly and in time."""
+        """Check if the question was answered correctly."""
     
-        if self.is_timeout():
-            return False
         return self.correct_answer == self.given_answer
         
     def make_guess(self, guess):
@@ -258,9 +256,10 @@ class Game(models.Model):
         return sum(q.calculate_points() for q in self.questions.all())
         
     def correct_answers(self):
-        """Return the number of correctly answered questions."""
+        """Return the number of correctly in time answered questions."""
     
-        return sum(1 for q in self.questions.all() if q.answered_correctly())
+        return sum(1 for q in self.questions.all()
+                        if q.answered_correctly() and not q.is_timeout())
         
     def has_started(self):
         """Check if the game has started.
@@ -274,7 +273,7 @@ class Game(models.Model):
         """Return current question."""
         
         if not self.has_started():
-            raise QuizModelException('game has not started')
+            raise QuizModelError('game has not started')
         return self.questions.order_by('-number')[0]
         
     def remaining_questions(self):

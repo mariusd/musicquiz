@@ -5,8 +5,6 @@ from django.core.paginator import Paginator
 from django.core.paginator import InvalidPage
 
 from models import Game
-from forms import WelcomeForm
-from forms import AnswerForm
 from utility import create_fragment
 
 def index(request):
@@ -91,15 +89,15 @@ def question(request):
             guess_data['answer'] = int(request.POST['answer'])
         current_question.make_guess(guess_data)
         
-        if current_question.answered_correctly():
-            prev_result = {
-                'class' : 'success',
-                'message' : 'Congratulations! You have answered correctly!',
-            }
-        elif current_question.is_timeout():
+        if current_question.is_timeout():
             prev_result = {
                 'class' : 'error',
                 'message' : 'Time is up.',
+            }
+        elif current_question.answered_correctly():
+            prev_result = {
+                'class' : 'success',
+                'message' : 'Congratulations! You have answered correctly!',
             }
         else:
             prev_result = {

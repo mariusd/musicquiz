@@ -1,7 +1,5 @@
 import unittest
 import doctest
-import musicquiz.quiz.forms
-import musicquiz.quiz.views
 from django.test import TestCase
 import homophony
 
@@ -27,10 +25,9 @@ def suite():
         wsgi_test_app.remove_redirect('ws.audioscrobbler.com')
     
     suite = unittest.TestSuite([
-        doctest.DocTestSuite(musicquiz.quiz.forms),
-        
         doctest.DocFileSuite('models.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('views.txt', setUp=setUp, tearDown=tearDown),
+        doctest.DocFileSuite('forms.txt', setUp=setUp, tearDown=tearDown),
         doctest.DocFileSuite('utility.txt', setUp=setUp, tearDown=tearDown),
         
         homophony.DocFileSuite('functional.txt'),

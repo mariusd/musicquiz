@@ -1,8 +1,267 @@
-====================
-Quiz app model tests
-====================
+﻿=======================
+Quiz application models
+=======================
 
-Track tests
------------
+Initialization
+--------------
+
+Test data is loaded automatically by django from fixtures/initial_data.
+
+A big part of quiz application functionality depends on randomness, thus
+we need to ensure consistent random numbers between all test runs:
+
+    >>> import random
+    >>> random.seed(42)
+    >>> random.random()
+    0.63942679845788375
+    
+    >>> from musicquiz.quiz.models import *
 
 
+Quiz game
+---------
+
+We will start by playing a simple quiz. Lets create a game:
+
+    >>> quiz = Game.objects.create(quiz_length=5)
+    >>> quiz.is_game_finished()
+    False
+    >>> quiz.has_started()
+    False
+    >>> quiz.remaining_questions()
+    5
+    
+Now we want to look at the first question and try making our guess:
+
+    >>> question = quiz.next_question()
+    >>> question.is_answered()
+    False
+    >>> choices = question.get_choices(count=5)
+    >>> print '\n'.join([str(t) for t in choices])
+    Arcade Fire – No Cars Go
+    Arcade Fire – Intervention
+    The Knife – Heartbeats
+    The Knife – Pass This On
+    David Bowie – Ziggy Stardust
+      
+To submit an answer we have to pass a dictionary containing the primary key
+of our answer track and a float number, which shows how much time remains
+to submit an answer (the sooner you submit, the more points you get):
+    
+    >>> choices[4].artist
+    <Artist: David Bowie>
+    >>> answer_id = choices[4].id
+    >>> question.make_guess({ 'answer' : answer_id, 'remaining_time' : 9.9 })
+    
+    >>> question.answered_correctly()
+    True
+    
+Congratulations! Our answer was correct. Now lets see if we have answered
+in time and also how many points do we get for this answer:
+
+    >>> question.is_answered()
+    True
+    >>> question.is_timeout()
+    False
+    >>> '%.1f points' % question.points
+    '9.9 points'
+    
+One important thing is that the correct answer to question must always
+have youtube_code and youtube_info fields, as otherwise the application
+would not be able to play it to the visitor:
+
+    >>> question.correct_answer
+    <Track: David Bowie – Ziggy Stardust>
+    >>> question.correct_answer.youtube_code
+    'XXq5VvYAI1Q'
+    >>> question.correct_answer.youtube_duration
+    '199'
+    
+Now we should move on to the next question:
+
+    >>> question = quiz.next_question()
+    
+Visitors may possibly do not know an answer, but they can skip a question:
+
+    >>> question.skip_question()
+    >>> question.is_answered()
+    True
+    >>> question.answered_correctly()
+    False
+    >>> question.is_timeout()
+    False
+    >>> question.points
+    0
+    
+We have already seen two questions, but the quiz is not finished yet:
+
+    >>> quiz.is_game_finished()
+    False
+    >>> quiz.remaining_questions()
+    3
+    
+Lets see what happens if we answer a question correctly, but after time:
+
+    >>> question = quiz.next_question()
+    >>> answer_id = question.correct_answer.id
+    >>> question.make_guess({ 'answer' : answer_id, 'remaining_time' : 0 })
+    
+    >>> question.is_answered()
+    True
+    >>> question.answered_correctly()
+    True
+    >>> question.is_timeout()
+    True
+    >>> question.points
+    0
+    
+Similar things happen when the user makes an incorrect guess after time:
+
+    >>> question = quiz.next_question()
+    >>> choices = question.get_choices()
+    >>> correct = question.correct_answer
+    >>> answer = choices[0] if correct != choices[0] else choices[1]
+    >>> question.make_guess({ 'answer' : answer.id, 'remaining_time' : 0 })
+    
+    >>> question.is_answered()
+    True
+    >>> question.answered_correctly()
+    False
+    >>> question.is_timeout()
+    True
+    >>> question.points
+    0
+    
+    >>> quiz.remaining_questions()
+    1
+    
+There is only one more question to answer! Lets see what it is:
+
+    >>> question = quiz.next_question()
+    >>> quiz.remaining_questions()
+    0
+    >>> quiz.is_game_finished()
+    False
+    
+We have not seen what happens if answer is incorrect and submitted in time:
+
+    >>> choices = question.get_choices()
+    >>> correct = question.correct_answer
+    >>> answer = choices[0] if correct != choices[0] else choices[1]
+    >>> question.make_guess({ 'answer' : answer.id, 'remaining_time' : 5 })
+    
+    >>> question.is_answered()
+    True
+    >>> question.answered_correctly()
+    False
+    >>> question.is_timeout()
+    False
+    >>> question.points
+    -10
+    
+That was the last questions. We can take a look at our performance:
+
+    >>> quiz.is_game_finished()
+    True
+    >>> quiz.correct_answers()
+    1
+    >>> '%.1f' % quiz.total_score()
+    '-0.1'
+    
+By the way, quiz is not allowed to contain the same question two times:
+
+    >>> len(set(q.correct_answer for q in quiz.questions.all()))
+    5
+    
+
+We want Game model to handle properly some of the errors.
+
+User cannot request a new question from the game which has already finished:
+
+    >>> quiz.next_question()
+    Traceback (most recent call last):
+    ...
+    QuizModelError: 'game is already over'
+    
+Similarly, if the game has not started, we can not request a current question:
+
+    >>> new_game = Game.objects.create(quiz_length=10)
+    >>> new_game.current_question()
+    Traceback (most recent call last):
+    ...
+    QuizModelError: 'game has not started'
+
+When user wants to see possible answers, he cannot request an empty list:
+
+    >>> q = new_game.next_question()
+    >>> new_game.current_question().get_choices(count=0)
+    Traceback (most recent call last):
+    ...
+    ValueError: there must be at least one answer
+    
+    
+Track
+-----
+
+Track model has a static method for picking a random track:
+  
+    >>> track = Track.pick_random()
+    >>> track
+    <Track: The Knife – Heartbeats>
+
+We can pass a special argument `exclude` so that pick_random ignores those
+tracks. We will check this functionality by contructing a special exclude
+list, which contains all but one track:
+
+    >>> all_tracks = list(Track.objects.all())
+    >>> not_excluded = all_tracks[0]
+    >>> exclude_list = all_tracks[1:]
+    >>> Track.pick_random(exclude=exclude_list)
+    <Track: David Bowie – Ziggy Stardust>
+    >>> not_excluded
+    <Track: David Bowie – Ziggy Stardust>
+    
+If we pass too strict exclusion list, we get an error:
+
+    >>> Track.pick_random(exclude=Track.objects.all())
+    Traceback (most recent call last):
+    ...
+    ValueError: could not pick any track
+    
+
+Another interesting feature is the ability to fetch the names of similar
+tracks and save them in a local database:
+
+    >>> joy_division = Artist.objects.create(name='Joy Division')
+    >>> track = Track.objects.create(artist=joy_division, title='Disorder')
+    >>> db_size_before = Track.objects.all().count()
+    >>> created = track.fetch_similar(limit=3)
+    >>> db_size_after = Track.objects.all().count()
+    
+    >>> created == db_size_after - db_size_before
+    True
+    
+According to http://www.last.fm/music/Joy+Division/_/Disorder/+similar
+the three most similar tracks are:
+
+    1. Joy Division - Shadowplay        3:29    227,903
+    2. Joy Division - New Dawn Fades    3:10    213,243
+    3. New Order - Ceremony             4:22    174,121
+    
+Lets check if they have been added to our local database:
+
+    >>> Track.objects.filter(title='Shadowplay')
+    [<Track: Joy Division – Shadowplay>]
+    
+    >>> Track.objects.filter(title='New Dawn Fades')
+    [<Track: Joy Division – New Dawn Fades>]
+    
+    >>> Track.objects.filter(title='Ceremony')
+    [<Track: New Order – Ceremony>]
+
+If user calls fetch_similar with negative limit, we throw an exception at him:
+    
+    >>> track.fetch_similar(-1)
+    Traceback (most recent call last):
+    ...
+    ValueError: limit must be a positive integer

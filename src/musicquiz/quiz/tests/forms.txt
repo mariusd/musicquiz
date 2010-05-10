@@ -1,0 +1,22 @@
+=======================
+Custom forms and fields
+=======================
+
+Standard django CharField does not have an option to strip the whitespace
+around the input, thus we need a custom one:
+
+    >>> from musicquiz.quiz.forms import StrippedCharField
+     
+    >>> field = StrippedCharField()
+    >>> field.clean('  \n value\t ')
+    u'value'
+     
+    >>> field = StrippedCharField()
+    >>> field.clean('value')
+    u'value'
+     
+    >>> field = StrippedCharField(min_length=5)
+    >>> field.clean('    1234') #doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    ValidationError: [u'Ensure this value has at least 5 characters ...

@@ -1,0 +1,65 @@
+-   fields: {name: David Bowie}
+    model: quiz.artist
+    pk: 1
+-   fields: {name: The Knife}
+    model: quiz.artist
+    pk: 2
+-   fields: {name: Arcade Fire}
+    model: quiz.artist
+    pk: 3
+-   fields: {name: Radiohead}
+    model: quiz.artist
+    pk: 4
+
+
+-   fields: {artist: 1, title: Ziggy Stardust, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 1
+-   fields: {artist: 1, title: Changes, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 2
+-   fields: {artist: 1, title: Space Oddity, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 3
+-   fields: {artist: 1, title: Starman, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 4
+    
+-   fields: {artist: 2, title: Heartbeats, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 5
+-   fields: {artist: 2, title: Pass This On, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 6
+-   fields: {artist: 2, title: Silent Shout, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 7
+-   fields: {artist: 2, title: Marble House, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 8
+    
+-   fields: {artist: 3, title: Wake Up, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 9
+-   fields: {artist: 3, title: Intervention, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 10
+-   fields: {artist: 3, title: No Cars Go, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 11
+-   fields: {artist: 3, title: Haiti, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 12
+    
+-   fields: {artist: 4, title: Karma Police, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 13
+-   fields: {artist: 4, title: Creep, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 14
+-   fields: {artist: 4, title: Paranoid Android, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 15
+-   fields: {artist: 4, title: No Surprises, youtube_code: null, youtube_duration: null}
+    model: quiz.track
+    pk: 16
