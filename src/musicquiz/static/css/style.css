@@ -62,6 +62,9 @@ table tbody td {
 table tbody tr.even td {
 	background-color:#F0F0F6;
 }
+table tbody tr.highlight td {
+	background-color:#E6EFC2;
+}
 
 #result a { color: #003366; }
 
