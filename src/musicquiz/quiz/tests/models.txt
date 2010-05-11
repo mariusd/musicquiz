@@ -176,9 +176,15 @@ By the way, quiz is not allowed to contain the same question two times:
 
 We want Game model to handle properly some of the errors.
 
-User cannot request a new question from the game which has already finished:
+User cannot request a new or current question from the game which has
+already finished:
 
     >>> quiz.next_question()
+    Traceback (most recent call last):
+    ...
+    QuizModelError: 'game is already over'
+    
+    >>> quiz.current_question()
     Traceback (most recent call last):
     ...
     QuizModelError: 'game is already over'

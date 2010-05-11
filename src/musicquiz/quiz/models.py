@@ -274,6 +274,9 @@ class Game(models.Model):
         
         if not self.has_started():
             raise QuizModelError('game has not started')
+        if self.is_game_finished():
+            raise QuizModelError('game is already over')
+            
         return self.questions.order_by('-number')[0]
         
     def remaining_questions(self):
@@ -284,12 +287,11 @@ class Game(models.Model):
     def is_game_finished(self):
         """Check if the game has already finished."""
         
-        if not self.questions.count():
+        if self.questions.count() != self.quiz_length:
             return False
         
-        last_question_answered = self.current_question().is_answered()
-        all_questions_shown = self.questions.count() == self.quiz_length
-        return all_questions_shown and last_question_answered
+        last_question = self.questions.get(number=self.quiz_length)
+        return last_question.is_answered()
         
     def __unicode__(self):
         return u'#%d' % (self.id)
