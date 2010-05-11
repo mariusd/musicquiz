@@ -7,8 +7,11 @@ import gdata.youtube.service
 import pylast
 import random
 import urllib
+import tagging
 
 EPSILON = 1e-9
+
+network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -99,33 +102,62 @@ class Track(models.Model):
                 self.youtube_code = extract_youtube_code(url)
                 self.youtube_duration = entry.media.duration.seconds
                 self.save()
+                
+    @staticmethod
+    def _save_lastfm_result(pylast_track_result):
+        """Save the result from pylast query to database.
+        
+        Returns the list of tuples (track, flag), where flag tells
+        whether the track was created or was it already in the database.
+        """
+        result = []
+        for pylast_track in pylast_track_result:
+            artist_name = pylast_track.item.artist.name
+            title = pylast_track.item.title
+            artist, _ = Artist.objects.get_or_create(name=artist_name)      
+            res = Track.objects.get_or_create(artist=artist, title=title)
+            result.append(res)
+        return result
             
     def fetch_similar(self, limit=None):
-        """Fetch a list or similar tracks and save them in the database.
+        """Fetch a list of similar tracks and save them in the database.
         
         Returns the count of newly added tracks.
         """
         
         if limit is not None and limit < 0:
             raise ValueError('limit must be a positive integer')
-        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)
+        global network
         lastfm_track = network.get_track(unicode(self.artist), self.title)
         similar = lastfm_track.get_similar()
-        new_songs = 0
+        
         if limit is not None:
             similar = similar[:limit]
-        for similar_track in similar:
-            artist_name = similar_track.item.artist.name
-            title = similar_track.item.title
-            artist, _ = Artist.objects.get_or_create(name=artist_name)      
-            result = Track.objects.get_or_create(artist=artist, title=title)
-            if result[1]:
-                new_songs += 1
-        return new_songs
+            
+        new_tracks = Track._save_lastfm_result(similar)
+        return sum(1 for (track, flag) in new_tracks if flag)
+        
+    @staticmethod
+    def fetch_top_tracks(tag):
+        """Get most popular tracks tagged with a specified tag.
+        
+        Returns the count of newly added tracks.
+        """
+        
+        global network
+        lastfm_tag = network.get_tag(tag)
+        top_tracks = lastfm_tag.get_top_tracks()
+        
+        new_tracks = Track._save_lastfm_result(top_tracks)
+        for track, flag in new_tracks:
+            tagging.models.Tag.objects.add_tag(track, tag)
+        return sum(1 for (track, flag) in new_tracks if flag)
     
     def __unicode__(self):
         return u'%s \u2013 %s' % (self.artist, self.title)
-    
+        
+tagging.register(Track)
+
     
 class Question(models.Model):
     """Quiz question model class."""

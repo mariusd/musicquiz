@@ -159,7 +159,7 @@ We have not seen what happens if answer is incorrect and submitted in time:
     >>> question.points
     -10
     
-That was the last questions. We can take a look at our performance:
+That was the last question. We can take a look at our performance:
 
     >>> quiz.is_game_finished()
     True
@@ -174,7 +174,7 @@ By the way, quiz is not allowed to contain the same question two times:
     5
     
 
-We want Game model to handle properly some of the errors.
+We want Game model to properly handle some of the errors.
 
 User cannot request a new or current question from the game which has
 already finished:
@@ -264,6 +264,15 @@ Lets check if they have been added to our local database:
     
     >>> Track.objects.filter(title='Ceremony')
     [<Track: New Order – Ceremony>]
+    
+Function fetch_similar returns the count of NEWLY added songs, so if we
+call it one more time with the same arguments, we should get zero:
+
+    >>> track.fetch_similar(limit=3)
+    0
+    
+    >>> track.fetch_similar(limit=4)
+    1
 
 If user calls fetch_similar with negative limit, we throw an exception at him:
     
@@ -271,3 +280,35 @@ If user calls fetch_similar with negative limit, we throw an exception at him:
     Traceback (most recent call last):
     ...
     ValueError: limit must be a positive integer
+    
+    
+There is another function for fetching data: fetch_top_tracks by tag.
+
+Just like fetch_similar, it returns the count of newly added tracks:
+
+    >>> Track.fetch_top_tracks(tag='queen')
+    50
+    
+We will check a couple of tracks (http://www.last.fm/tag/queen/tracks):
+
+    >>> queen_track = Track.objects.get(title='Bohemian Rhapsody')
+    >>> queen_track.tags.filter(name='queen')
+    [<Tag: queen>]
+    
+    >>> another_track = Track.objects.get(title='Flash')
+    >>> another_track.tags.filter(name='queen')
+    [<Tag: queen>]
+    
+    >>> from tagging.models import Tag, TaggedItem
+    >>> queen_tag = Tag.objects.get(name='queen')
+    >>> tagged = TaggedItem.objects.get_by_model(Track, queen_tag)
+    >>> queen_track in tagged
+    True
+    >>> another_track in tagged
+    True
+
+Calling fetch_top_tracks second time the with same arguments gives zero:
+
+    >>> Track.fetch_top_tracks(tag='queen')
+    0
+
