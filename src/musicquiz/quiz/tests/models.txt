@@ -307,8 +307,25 @@ We will check a couple of tracks (http://www.last.fm/tag/queen/tracks):
     >>> another_track in tagged
     True
 
-Calling fetch_top_tracks second time the with same arguments gives zero:
+Calling fetch_top_tracks second time with the same arguments gives zero:
 
     >>> Track.fetch_top_tracks(tag='queen')
     0
+    
+Make sure there are no problems with tags consisting of more than one word:
 
+    >>> Track.fetch_top_tracks(tag='kate bush')
+    50
+    >>> tag = Tag.objects.get(name='kate bush')
+    >>> babooshka = Track.objects.get(title='Babooshka')
+    >>> tagged = TaggedItem.objects.get_by_model(Track, tag)
+    >>> babooshka in tagged
+    True
+    
+    >>> babooshka.tags
+    [<Tag: kate bush>]
+    
+If we supply a tag which has no related tracks in last.fm, we get zero:
+
+    >>> Track.fetch_top_tracks(tag='1w1gfh2_random_tag_no_results666')
+    0

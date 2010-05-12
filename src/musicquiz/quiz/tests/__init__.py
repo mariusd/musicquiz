@@ -1,5 +1,6 @@
 import unittest
 import doctest
+import urllib
 from django.test import TestCase
 import homophony
 

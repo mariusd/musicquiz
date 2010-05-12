@@ -52,6 +52,7 @@ def create_app(host, reconstruct_url):
 
     def test_app(environ, start_response):
         """Simplest possible application object"""
+        
         url, port =  reconstruct_url(environ), 80
         key = md5hash(url)
         status = '200 OK'
@@ -69,7 +70,10 @@ def create_app(host, reconstruct_url):
         except IOError:
             create_fn, script = wsgi_intercept._wsgi_intercept[(host, port)]
             remove_redirect(host)
-            filedata = urllib2.urlopen(url).read()
+            try:
+                filedata = urllib2.urlopen(url).read()
+            except urllib2.HTTPError, e:
+                filedata = e.read()
             redirect(host, reconstruct_url)
             open(file, "w").write(filedata)
         return [filedata]

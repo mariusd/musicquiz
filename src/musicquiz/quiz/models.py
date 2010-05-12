@@ -145,12 +145,16 @@ class Track(models.Model):
         """
         
         global network
-        lastfm_tag = network.get_tag(tag)
-        top_tracks = lastfm_tag.get_top_tracks()
+        lastfm_tag = network.get_tag('%s' % tag)
         
+        try:
+            top_tracks = lastfm_tag.get_top_tracks()
+        except pylast.WSError, e:
+            top_tracks = []
+            
         new_tracks = Track._save_lastfm_result(top_tracks)
         for track, flag in new_tracks:
-            tagging.models.Tag.objects.add_tag(track, tag)
+            tagging.models.Tag.objects.add_tag(track, '"%s"' % tag)
         return sum(1 for (track, flag) in new_tracks if flag)
     
     def __unicode__(self):
