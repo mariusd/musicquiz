@@ -39,7 +39,7 @@ Now we want to look at the first question and try making our guess:
     >>> question = quiz.next_question()
     >>> question.is_answered()
     False
-    >>> choices = question.get_choices(count=5)
+    >>> choices = question.create_choices(count=5)
     >>> print '\n'.join([str(t) for t in choices])
     The Knife – Heartbeats
     Arcade Fire – No Cars Go
@@ -122,7 +122,7 @@ Lets see what happens if we answer a question correctly, but after time:
 Similar things happen when the user makes an incorrect guess after time:
 
     >>> question = quiz.next_question()
-    >>> choices = question.get_choices()
+    >>> choices = question.create_choices()
     >>> correct = question.correct_answer
     >>> answer = choices[0] if correct != choices[0] else choices[1]
     >>> question.make_guess({ 'answer' : answer.id, 'remaining_time' : 0 })
@@ -149,7 +149,7 @@ There is only one more question to answer! Lets see what it is:
     
 We have not seen what happens if answer is incorrect and submitted in time:
 
-    >>> choices = question.get_choices()
+    >>> choices = question.create_choices()
     >>> correct = question.correct_answer
     >>> answer = choices[0] if correct != choices[0] else choices[1]
     >>> question.make_guess({ 'answer' : answer.id, 'remaining_time' : 5 })
@@ -214,7 +214,7 @@ Similarly, if the game has not started, we can not request a current question:
 When user wants to see possible answers, he cannot request an empty list:
 
     >>> q = new_game.next_question()
-    >>> new_game.current_question().get_choices(count=0)
+    >>> new_game.current_question().create_choices(count=0)
     Traceback (most recent call last):
     ...
     ValueError: there must be at least one answer
@@ -244,12 +244,12 @@ to start a quiz based on that tag:
     #4 2. Ludovico Einaudi – Primavera
     #4 3. Wolfgang Amadeus Mozart – Lacrimosa
     
-For each such question, possible answers must consist of at least half of
-the answers, which are tagged with the same tag (otherwise it would be too
-easy to guess the correct answer).
+For each such question, at least half of the possible answers must consist
+of tracks, which are tagged with the same tag as correct answer (otherwise it
+would be too easy to guess the correct answer).
 
     >>> first_question = questions[0]
-    >>> choices = first_question.get_choices(count=10)
+    >>> choices = first_question.create_choices(count=10)
     >>> classical_tag = tagging.models.Tag.objects.get(name='classical')
     >>> sum(1 for c in choices if classical_tag in c.tags) >= 5
     True

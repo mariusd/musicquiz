@@ -246,7 +246,7 @@ class Question(models.Model):
         
         return self.state == 'TIMEOUT'
         
-    def get_choices(self, count=8):
+    def create_choices(self, count=8):
         """Return a list of randomly selected possible answers.
         
         Correct answer is always one of the possible choices, but

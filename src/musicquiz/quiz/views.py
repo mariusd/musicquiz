@@ -3,8 +3,11 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator
 from django.core.paginator import InvalidPage
+from tagging.models import Tag
+from tagging.models import TaggedItem
 
 from models import Game
+from models import Track
 from utility import create_fragment
 
 def index(request):
@@ -12,10 +15,17 @@ def index(request):
     
     if request.method == 'POST':
         question_url = reverse('musicquiz.quiz.views.question')
-        return new_game(request)
+        quiz_tag = request.POST['quiz_tag'].strip()
+        if len(quiz_tag) > 0:
+            return new_game(request, tag=quiz_tag)
+        else:
+            return new_game(request)
     
     if 'game' in request.session.keys():
         current_game = request.session['game']
+        if Game.objects.filter(pk=current_game.pk).count() == 0:
+            current_game = 0
+            del request.session['game']
     else:
         current_game = None
                 
@@ -24,10 +34,29 @@ def index(request):
     })
     
     
-def new_game(request):
+def new_game(request, tag=None):
     """Start new game."""
     
-    request.session['game'] = Game.objects.create(quiz_length=10)
+    new_game = Game.objects.create(quiz_length=10)
+    if tag:
+        Track.fetch_top_tracks(tag)
+        tag_object, _ = Tag.objects.get_or_create(name='%s' % tag)
+        tagged = TaggedItem.objects.get_by_model(Track, tag_object)
+        tracks_with_tag = tagged.count()
+        if tracks_with_tag == 0:
+            tag_object.delete()
+        if tracks_with_tag < 20:
+            err = ''.join(['There is not enough data to create a quiz. ',
+                                'Please choose a more popular tag.'])
+            new_game.delete()
+            return render_to_response('quiz/index.html', {
+                'error_msg' : err,
+                'current_game' : None,
+            })
+        else:
+            new_game.tags = '"%s"' % tag
+
+    request.session['game'] = new_game    
     question_url = reverse('musicquiz.quiz.views.question')
     return HttpResponseRedirect(question_url)
     
@@ -121,7 +150,7 @@ def question(request):
         return HttpResponseRedirect(game_history_url)
     
     next_question = game.next_question()
-    possible_answers = next_question.get_choices()
+    possible_answers = next_question.create_choices()
     choices = [(item.pk, unicode(item)) for item in possible_answers]
     return render_to_response('quiz/question.html', {
         'choices' : choices,

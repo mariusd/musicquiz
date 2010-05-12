@@ -6,3 +6,32 @@ To minimize the overlap between functional tests and tests for views, these
 tests should concentrate on checking whether view functions return correct
 context. Checking of rendered HTML pages is left up to functional tests.
 
+Initialization
+--------------
+
+Test data is loaded automatically by django from fixtures/initial_data.
+
+A big part of quiz application functionality depends on randomness, thus
+we need to ensure consistent random numbers between all test runs:
+
+    >>> import random
+    >>> random.seed(42)
+    >>> random.random()
+    0.63942679845788375
+    
+    >>> from musicquiz.quiz.models import *
+    >>> import django.test
+    >>> from django.core.urlresolvers import reverse
+    >>> django.test.utils.setup_test_environment()
+    >>> c = django.test.Client()
+
+    
+Index page
+----------
+
+Lets begin by opening the index page and checking context variables:
+
+    >>> index = reverse('musicquiz.quiz.views.index')
+    >>> response = c.get(index)
+    >>> response.status_code
+    200

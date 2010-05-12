@@ -6,6 +6,20 @@ body
     color:#222; 
 }
 
+#cloud { text-align: center; }
+
+#cloud a:link {color:#76827B;}      /* unvisited link */
+#cloud a:visited {color:#76827B;}  /* visited link */
+#cloud a:hover {color:#374341;}  /* mouse over link */
+#cloud a:active {color:#76827B;}  /* selected link */
+
+.fontsize1 { font-size: 12px; }
+.fontsize2{ font-size: 15px; }
+.fontsize3 { font-size: 20px; }
+.fontsize4 { font-size: 23px; }
+.fontsize5 { font-size: 28px; }
+.fontsize6 { font-size: 35px; }
+
 #container {
     width: 700px;
     margin:0 auto;
