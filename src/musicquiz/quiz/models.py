@@ -2,6 +2,7 @@ from django.db import models
 from django.db import IntegrityError
 from django.conf import settings
 from utility import extract_youtube_code
+from tagging.models import TaggedItem
 import gdata.youtube
 import gdata.youtube.service
 import pylast
@@ -26,8 +27,11 @@ class QuizModelError(Error):
     
     def __init__(self, value):
         self.value = value
-
+        
     def __str__(self):
+        return repr(self.value)
+
+    def __unicode__(self):
         return repr(self.value)
  
  
@@ -62,7 +66,7 @@ class Track(models.Model):
     youtube_duration = models.IntegerField(null=True, blank=True)
     
     @staticmethod
-    def pick_random(exclude=[]):
+    def pick_random(exclude=[], tag=None):
         """Pick a random track which is not in the exclude list.
         
         Returned track is guaranteed to have youtube code and duration.
@@ -70,7 +74,12 @@ class Track(models.Model):
         
         exclude_pks = [track.pk for track in exclude]
         try:
-            track = random.choice(Track.objects.exclude(pk__in=exclude_pks))
+            if not tag:
+                track_objects = Track.objects
+            else:
+                tagged_obj = TaggedItem.objects
+                track_objects = tagged_obj.get_by_model(Track, tag)
+            track = random.choice(track_objects.exclude(pk__in=exclude_pks))
         except IndexError, e:
             raise ValueError('could not pick any track')
         else:
@@ -79,7 +88,7 @@ class Track(models.Model):
             if track.has_youtube_info():
                 return track
             else:
-                return Track.pick_random(exclude=exclude + [track])
+                return Track.pick_random(exclude=exclude + [track], tag=tag)
     
     def has_youtube_info(self):
         """Check if track has all required info about its youtube video."""
@@ -247,8 +256,25 @@ class Question(models.Model):
         
         if count < 1:
             raise ValueError('there must be at least one answer')
-        query = Track.objects.exclude(pk__in=[self.correct_answer.pk])
-        choices = random.sample(query, count - 1) + [self.correct_answer]
+        if not self.game.tags:
+            tracks_with_tag = 0
+        else:
+            tracks_with_tag = (count + 1) / 2
+            
+        choices = [self.correct_answer]
+        
+        if tracks_with_tag:
+            tagged_obj = TaggedItem.objects
+            tag = self.game.tags[0]
+            track_objects = TaggedItem.objects.get_by_model(Track, tag)
+            query = track_objects.exclude(pk__in=[self.correct_answer.pk])
+            choices += random.sample(query, tracks_with_tag)
+        
+        if count - tracks_with_tag - 1 > 0:
+            exclude_list = [t.pk for t in choices]
+            query = Track.objects.exclude(pk__in=exclude_list)
+            choices += random.sample(query, count - tracks_with_tag - 1)
+            
         random.shuffle(choices)
         return choices
 
@@ -267,8 +293,16 @@ class Game(models.Model):
         
         if self.is_game_finished():
             raise QuizModelError('game is already over')
+            
+        if self.questions.count() == self.quiz_length:
+            raise QuizModelError('there are no more questions left')
+        
         seen_tracks = [q.correct_answer for q in self.questions.all()]
-        answer = Track.pick_random(exclude=seen_tracks)
+        if not self.tags:
+            answer = Track.pick_random(exclude=seen_tracks)
+        else:
+            tag = self.tags[0]
+            answer = Track.pick_random(exclude=seen_tracks, tag=tag)
         number = self.questions.count() + 1
         question = Question.objects.create(game=self,
                         correct_answer=answer, number=number)
@@ -331,3 +365,5 @@ class Game(models.Model):
         
     def __unicode__(self):
         return u'#%d' % (self.id)
+
+tagging.register(Game)

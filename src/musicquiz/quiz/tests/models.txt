@@ -18,8 +18,11 @@ we need to ensure consistent random numbers between all test runs:
     >>> from musicquiz.quiz.models import *
 
 
-Quiz game
----------
+Quiz
+----
+
+Simple game
+~~~~~~~~~~~
 
 We will start by playing a simple quiz. Lets create a game:
 
@@ -38,19 +41,20 @@ Now we want to look at the first question and try making our guess:
     False
     >>> choices = question.get_choices(count=5)
     >>> print '\n'.join([str(t) for t in choices])
-    Arcade Fire – No Cars Go
-    Arcade Fire – Intervention
     The Knife – Heartbeats
+    Arcade Fire – No Cars Go
     The Knife – Pass This On
     David Bowie – Ziggy Stardust
+    Arcade Fire – Intervention
+
       
 To submit an answer we have to pass a dictionary containing the primary key
 of our answer track and a float number, which shows how much time remains
 to submit an answer (the sooner you submit, the more points you get):
     
-    >>> choices[4].artist
+    >>> choices[3].artist
     <Artist: David Bowie>
-    >>> answer_id = choices[4].id
+    >>> answer_id = choices[3].id
     >>> question.make_guess({ 'answer' : answer_id, 'remaining_time' : 9.9 })
     
     >>> question.answered_correctly()
@@ -172,7 +176,10 @@ By the way, quiz is not allowed to contain the same question two times:
 
     >>> len(set(q.correct_answer for q in quiz.questions.all()))
     5
+
     
+Error handling
+~~~~~~~~~~~~~~
 
 We want Game model to properly handle some of the errors.
 
@@ -189,6 +196,13 @@ already finished:
     ...
     QuizModelError: 'game is already over'
     
+    >>> quiz = Game.objects.create(quiz_length=5)
+    >>> while True:
+    ...     quiz.next_question()
+    Traceback (most recent call last):
+    ...
+    QuizModelError: 'there are no more questions left'
+    
 Similarly, if the game has not started, we can not request a current question:
 
     >>> new_game = Game.objects.create(quiz_length=10)
@@ -204,7 +218,42 @@ When user wants to see possible answers, he cannot request an empty list:
     Traceback (most recent call last):
     ...
     ValueError: there must be at least one answer
+
+
+Quiz created with a tag
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In the quiz we played before all tracks were chosen randomly. There is a
+possibility to create a game where all questions have something in common,
+that is a common tag.
+
+Before we begin, lets fetch some tracks with a tag 'classical':
     
+    >>> Track.fetch_top_tracks(tag='classical')
+    50
+    
+Now we have at least 50 tracks tagged with 'classical' and we are ready
+to start a quiz based on that tag:
+
+    >>> quiz = Game.objects.create(quiz_length=10)
+    >>> quiz.tags = 'classical'
+    
+    >>> questions = [quiz.next_question() for i in range(quiz.quiz_length)]
+    >>> print '\n'.join([str(q) for q in questions[:3]])
+    #4 1. Johann Sebastian Bach – Toccata and Fugue in D Minor
+    #4 2. Ludovico Einaudi – Primavera
+    #4 3. Wolfgang Amadeus Mozart – Lacrimosa
+    
+For each such question, possible answers must consist of at least half of
+the answers, which are tagged with the same tag (otherwise it would be too
+easy to guess the correct answer).
+
+    >>> first_question = questions[0]
+    >>> choices = first_question.get_choices(count=10)
+    >>> classical_tag = tagging.models.Tag.objects.get(name='classical')
+    >>> sum(1 for c in choices if classical_tag in c.tags) >= 5
+    True
+
     
 Track
 -----
@@ -213,7 +262,7 @@ Track model has a static method for picking a random track:
   
     >>> track = Track.pick_random()
     >>> track
-    <Track: The Knife – Heartbeats>
+    <Track: Ludwig van Beethoven – Für Elise>
 
 We can pass a special argument `exclude` so that pick_random ignores those
 tracks. We will check this functionality by contructing a special exclude
