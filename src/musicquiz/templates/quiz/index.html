@@ -1,78 +1,104 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Music Quiz</title>
-    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    <link rel="stylesheet" href="/static/css/style.css" type="text/css"/>
-    <script type="text/javascript" src="/static/js/sprintf.js"></script>
-    <script type="text/javascript">
-    
-        window.onload = function() {
-            var submitButton = document.getElementById('submitbutton');
-            submitButton.disabled = false;   
-        }
-    
-        function enterTag(tagName) {
-            var tagField = document.getElementsByName("quiz_tag")[0];
-            tagField.value = tagName;
-        }
-        
-        function startLoading() {
-            var pleaseWait = document.getElementById("loading");
-            pleaseWait.style.visibility = "visible";
-            var tagField = document.getElementsByName("quiz_tag")[0];
-            var submitButton = document.getElementById('submitbutton');
-            submitButton.disabled = true;            
-        }
-        
-    </script>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Music Quiz</title>
+<link href="/static/css/default.css" rel="stylesheet" type="text/css" />
+<link href="/static/css/style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-<div id="container">
-    <h1>Music Quiz</h1>
-    {% block content %}
-        
-    <p>Welcome to Music Quiz website.</p>
-    {% if current_game and not current_game.is_game_finished %}
-        <h2>Continue</h2>
-        <p>You have not finished your last quiz
-        ({{ current_game.remaining_questions }} unanswered questions).
-        <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
-    {% endif %}
-    
-    <h2>New game</h2>
-    {% if error_msg %}
-        <p class="error">{{ error_msg }}</p>
-    {% endif %}
-    <form method="post" action="{% url musicquiz.quiz.views.index %}"
-          onsubmit="javascript:startLoading()">
-        <p>To start a new game, enter a quiz theme
-        <input type="text" name="quiz_tag" size="14"/> and click ⇨
-        <input type="submit" value="Start!" id="submitbutton"/>
-            <span id="loading" style="visibility: hidden">
-            <img style="vertical-align: middle" src="/static/images/loader.gif"/>
-            Please wait..</span>
-        </p>
-        
-        <p>You can leave the tag field empty,
-        then all possible questions will be used.</p>
-    </form>
-    {% load tagging_tags %}
-    {% tag_cloud_for_model quiz.Track as game_tags with steps=6 distribution=log %}
-    {% if game_tags %}
-    <h2>Popular tags</h2>
-    <p>If you cannot think of any interesting ideas for a quiz, take a look
-    at the most popular games:</p>
-    <div id="cloud">
-    {% for tag in game_tags %}
-        <a class="fontsize{{tag.font_size}}"
-           href="javascript:enterTag('{{tag.name}}')">
-        {{tag.name|slugify}}</a>  
-    {% endfor %}
-    </div>
-    {% endif %}
-    {% endblock %}
+<div id="wrapper">
+<div id="header">
+	<div id="logo">
+		<h1><a href="{% url musicquiz.quiz.views.index %}">Music Quiz</a></h1>
+		<h2>What song is playing?</h2>
+	</div>
+	<!-- end div#logo -->
+	<div id="menu">
+		<ul>
+			<li><a href="{% url musicquiz.quiz.views.index %}">Homepage</a></li>
+			<li><a href="{% url musicquiz.quiz.views.highscores %}">Highscores</a></li>
+			<li><a href="#">About</a></li>
+			<li><a href="#">Contact</a></li>
+		</ul>
+	</div>
+	<!-- end div#menu -->
 </div>
+<div>
+<div id="page">
+<div id="page-bgtop">
+<div id="content">
+{% block content %}
+    <div class="post"><div class="post-bgtop"><div class="post-bgbtm">
+        <h2 class="title">new game</h2>
+        
+        <div class="entry">
+            {% if current_game and not current_game.is_game_finished %}
+                <h2>Continue</h2>
+                <p>You have not finished your last quiz
+                ({{ current_game.remaining_questions }} unanswered questions).
+                <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
+            {% endif %}
+            
+            {% if error_msg %}<p class="error">{{ error_msg }}</p>{% endif %}
+            
+            <form method="post" action="{% url musicquiz.quiz.views.index %}"
+                  onsubmit="javascript:startLoading()">
+                <p>To start a new game, enter a quiz theme
+                <input type="text" name="quiz_tag" size="14"/> and click
+                <input type="submit" value="start!" id="submit"/>
+                </p>
+                <p>You can leave the theme field empty, then all possible questions will be used.</p>
+            </form>
+        </div>
+
+        <div class="entry">
+        <h2 class="title">Popular tags</h2>
+            {% load tagging_tags %}
+            {% tag_cloud_for_model quiz.Track as game_tags with steps=6 distribution=log %}
+            {% if game_tags %}
+            <p>If you cannot think of any interesting ideas for a quiz, take a look
+            at the most popular games:</p>
+            <div id="cloud">
+            {% for tag in game_tags %}
+                <a class="fontsize{{tag.font_size}}"
+                   href="javascript:enterTag('{{tag.name}}')">
+                {{tag.name|slugify}}</a>
+            {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div></div></div>
+    
+    
+    <div class="post"><div class="post-bgtop"><div class="post-bgbtm">
+        <h2 class="title">what is this?</h2>
+        <div class="entry">
+        <p>This is a place where you can test your knowledge about music.</p>
+        <p>The rules are simple – website plays a fragment of the song and
+        you have to choose the correct title from the list of possible answers.
+        You can find out more about the implementation and etc by visiting the about page.</p>
+        </div>
+        <div class="meta">
+            <p><a href="#" class="more">View more</a></p>
+        </div>
+    </div></div></div>
+{% endblock %}
+</div>
+<!-- end div#content -->
+
+<div style="clear: both; height: 1px"></div>
+</div>
+</div>
+<!-- end div#page -->
+</div>
+<!-- end div#wrapper -->
+<div id="footer-wrapper">
+	<div id="footer">
+		<p id="legal">This website uses a template designed by <a href="http://www.freecsstemplates.org/">Free CSS Templates</a>.</p>
+	</div>
+</div>
+<!-- end div#footer -->
 </body>
 </html>
