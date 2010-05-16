@@ -12,14 +12,6 @@
 .fontsize5 { font-size: 28px; }
 .fontsize6 { font-size: 35px; }
 
-
-#timer {
-    padding: 5px;
-    padding-right: 0px;
-    font-size: 1.5em;
-    float: right;
-}
-
 /* from blueprint css files */
 .error, .notice, .success {padding:.4em;margin-bottom:1em;border:2px solid #ddd;}
 .error {background:#FBE3E4;color:#8a1f11;border-color:#FBC2C4;}
@@ -30,6 +22,9 @@
 
 /* Tables
 -------------------------------------------------------------- */
+table a:link { color:#76827B; }
+table a:hover { color:#374341; } 
+
 table {
 	font-family:arial;
 	background-color: #CDCDCD;

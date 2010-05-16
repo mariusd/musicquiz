@@ -50,7 +50,7 @@ function runTimer() {
     timeLeftFloat = sprintf("%.1f", timeLeft / 1000);
     timerDiv.firstChild.nodeValue = timeLeftFloat
     var timeField = document.getElementsByName("remaining_time")[0];
-    timeField.value = timeLeftFloat
+    timeField.value = timeLeftFloat;
     if (timeLeft < 10 * 1000) {
         timerDiv.style.color = '#CC0000';
     }

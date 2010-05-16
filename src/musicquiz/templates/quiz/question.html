@@ -1,7 +1,6 @@
 {% extends 'quiz/index.html' %}
 
 {% block content %}
-
 <script type="text/javascript" src="/static/js/mootools-1.2.4-core-yc.js"></script>
 <script type="text/javascript" src="/static/js/mootools-1.2.4.4-more.js"></script>
 <script type="text/javascript" src="/static/js/moocheck.js"></script>
@@ -12,27 +11,29 @@
 </script>
 <script type="text/javascript" src="/static/js/quiz.js"></script>
 
-{% if prev_result %}
-    <div id="result">
-        <p class={{ prev_result.class }}>{{ prev_result.message }}
-        
-        {% ifnotequal prev_result.class 'success' %}
-            Correct answer was
-            <a href="http://www.youtube.com/watch?v={{ prev_result.correct.youtube_code }}"
-               target="blank">{{ prev_result.correct }}</a>
-        {% endifnotequal %}        
-        </p>
+<div class="post"><div class="post-bgtop"><div class="post-bgbtm">
 
-    </div>
+{% if prev_result %}
+<div id="result">
+    <p class={{ prev_result.class }}>{{ prev_result.message }}
+    {% ifnotequal prev_result.class 'success' %}
+        Correct answer was
+        <a href="http://www.youtube.com/watch?v={{ prev_result.correct.youtube_code }}"
+           target="blank">{{ prev_result.correct }}</a>
+    {% endifnotequal %}        
+    </p>
+</div>
 {% endif %}
 
 <div id="timer">
     <img src="/static/images/loader.gif"/>
 </div>
-<h2>Question ({{ question.number }}/{{ length }})</h2>
-<a href="{% url musicquiz.quiz.views.question %}"
-   style="clear:both;float: right">Skip question</a>
-<p>Can you guess what song is playing?</p>
+<h2 class="title">Question ({{ question.number }}/{{ length }})</h2>
+
+<p><a href="{% url musicquiz.quiz.views.question %}"
+   style="clear:both;float: right">Skip question</a></p>
+
+<div class="entry">     
 
 <div id="ytapiplayer">
     <p class="error">
@@ -53,5 +54,6 @@
     <input type="hidden" name="remaining_time" value="20.0"/>
     </form>
 </div>
-
+</div>
+</div></div></div>
 {% endblock %}

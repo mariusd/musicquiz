@@ -1,12 +1,11 @@
 {% extends 'quiz/index.html' %}
 
 {% block content %}
+<div class="post"><div class="post-bgtop"><div class="post-bgbtm">
+<h2 class="title">Result</h2>
 
-<p>This is a report of the last quiz that you have played.
-<a href="{% url musicquiz.quiz.views.index %}">Go back to index page</a>.</p>
-
-<h2>Result</h2>
-<p>Your score is:</p>
+<div class="entry">
+<p>This is a report of the last quiz that you have played. Your score:</p>
 <center style="font-size:xx-large;">{{ total_score }}</center>
 
 <h2>Highscores</h2>
@@ -82,4 +81,6 @@
 </tbody>
 </table>
 
+</div>
+</div></div></div>
 {% endblock %}

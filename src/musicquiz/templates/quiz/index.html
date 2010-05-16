@@ -6,6 +6,24 @@
 <title>Music Quiz</title>
 <link href="/static/css/default.css" rel="stylesheet" type="text/css" />
 <link href="/static/css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/static/js/sprintf.js"></script>
+<script type="text/javascript">
+    window.onload = function() {
+        var submitButton = document.getElementById('submit');
+        submitButton.disabled = false;
+    }
+
+    function enterTag(tagName) {
+        var tagField = document.getElementsByName("quiz_tag")[0];
+        tagField.value = tagName;
+    }
+    
+    function startLoading() {
+        var submitButton = document.getElementById('submit');
+        submitButton.disabled = true;
+        submitButton.value = "Please wait..";
+    }
+</script>
 </head>
 <body>
 <div id="wrapper">
@@ -31,15 +49,13 @@
 <div id="content">
 {% block content %}
     <div class="post"><div class="post-bgtop"><div class="post-bgbtm">
+        {% if current_game and not current_game.is_game_finished %}
+            <p class="notice">You have not finished your last quiz
+            ({{ current_game.remaining_questions }} unanswered questions).
+            <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
+        {% endif %}
         <h2 class="title">new game</h2>
-        
         <div class="entry">
-            {% if current_game and not current_game.is_game_finished %}
-                <h2>Continue</h2>
-                <p>You have not finished your last quiz
-                ({{ current_game.remaining_questions }} unanswered questions).
-                <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
-            {% endif %}
             
             {% if error_msg %}<p class="error">{{ error_msg }}</p>{% endif %}
             
@@ -56,7 +72,7 @@
         <div class="entry">
         <h2 class="title">Popular tags</h2>
             {% load tagging_tags %}
-            {% tag_cloud_for_model quiz.Track as game_tags with steps=6 distribution=log %}
+            {% tag_cloud_for_model quiz.Game as game_tags with steps=6 distribution=log %}
             {% if game_tags %}
             <p>If you cannot think of any interesting ideas for a quiz, take a look
             at the most popular games:</p>

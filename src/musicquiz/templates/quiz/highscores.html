@@ -1,8 +1,9 @@
 {% extends 'quiz/index.html' %}
 
 {% block content %}
-<p><a href="{% url musicquiz.quiz.views.index %}">Go back to index page</a>.</p>
-<h2>Highscores</h2>
+<div class="post"><div class="post-bgtop"><div class="post-bgbtm">
+    <h2 class="title">highscores</h2>
+    <div class="entry">     
 <table border="0" cellpadding="0" cellspacing="1">
 <thead>
 <tr>
@@ -29,13 +30,15 @@
 </table>
 
 <div class="pagination">
-{% if scores.has_previous %}
-    <a href="{% url musicquiz.quiz.views.highscores scores.previous_page_number %}">previous</a>
-{% endif %}
+    {% if scores.has_previous %}
+        <a href="{% url musicquiz.quiz.views.highscores scores.previous_page_number %}">previous</a>
+    {% endif %}
     Page {{ scores.number }} of {{ scores.paginator.num_pages }}
-{% if scores.has_next %}
-    <a href="{% url musicquiz.quiz.views.highscores scores.next_page_number %}">next</a>
-{% endif %}
+    {% if scores.has_next %}
+        <a href="{% url musicquiz.quiz.views.highscores scores.next_page_number %}">next</a>
+    {% endif %}
 </div>
 
+</div>
+</div></div></div>
 {% endblock %}
