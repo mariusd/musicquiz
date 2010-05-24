@@ -126,17 +126,17 @@
 <div id="content-header">
   <h1>
     <span id="module-name">musicquiz.quiz.views</span>:
-    68 total statements,
-    <span class="critical">14.8% covered</span>
+    90 total statements,
+    <span class="critical">11.3% covered</span>
   </h1>
-  <p>Generated: Mon 2010-05-10 17:51 FLE Daylight Time</p>
+  <p>Generated: Tue 2010-05-25 01:41 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\views.py</p>
   <p>
     Stats:
     <span class="executed">9 executed</span>,
-    <span class="missed">52 missed</span>,
-    <span class="excluded">7 excluded</span>,
-    <span class="ignored">63 ignored</span> 
+    <span class="missed">71 missed</span>,
+    <span class="excluded">10 excluded</span>,
+    <span class="ignored">70 ignored</span> 
   </p> 
 </div>
 
@@ -147,8 +147,11 @@
 <li class="excluded"><code>from django.core.urlresolvers import reverse</code></li>
 <li class="excluded"><code>from django.core.paginator import Paginator</code></li>
 <li class="excluded"><code>from django.core.paginator import InvalidPage</code></li>
+<li class="excluded"><code>from tagging.models import Tag</code></li>
+<li class="excluded"><code>from tagging.models import TaggedItem</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>from models import Game</code></li>
+<li class="excluded"><code>from models import Track</code></li>
 <li class="excluded"><code>from utility import create_fragment</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>def index(request):</code></li>
@@ -156,10 +159,17 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    if request.method == 'POST':</code></li>
 <li class="missed"><code>        question_url = reverse('musicquiz.quiz.views.question')</code></li>
-<li class="missed"><code>        return new_game(request)</code></li>
+<li class="missed"><code>        quiz_tag = request.POST['quiz_tag'].strip()</code></li>
+<li class="missed"><code>        if len(quiz_tag) &gt; 0:</code></li>
+<li class="missed"><code>            return new_game(request, tag=quiz_tag)</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="missed"><code>            return new_game(request)</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    if 'game' in request.session.keys():</code></li>
 <li class="missed"><code>        current_game = request.session['game']</code></li>
+<li class="missed"><code>        if Game.objects.filter(pk=current_game.pk).count() == 0:</code></li>
+<li class="missed"><code>            current_game = 0</code></li>
+<li class="missed"><code>            del request.session['game']</code></li>
 <li class="ignored"><code>    else:</code></li>
 <li class="executed"><code>        current_game = None</code></li>
 <li class="ignored"><code></code></li>
@@ -168,10 +178,29 @@
 <li class="ignored"><code>    })</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>def new_game(request):</code></li>
+<li class="executed"><code>def new_game(request, tag=None):</code></li>
 <li class="ignored"><code>    """Start new game."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="missed"><code>    request.session['game'] = Game.objects.create(quiz_length=10)</code></li>
+<li class="missed"><code>    new_game = Game.objects.create(quiz_length=10)</code></li>
+<li class="missed"><code>    if tag:</code></li>
+<li class="missed"><code>        Track.fetch_top_tracks(tag)</code></li>
+<li class="missed"><code>        tag_object, _ = Tag.objects.get_or_create(name='%s' % tag)</code></li>
+<li class="missed"><code>        tagged = TaggedItem.objects.get_by_model(Track, tag_object)</code></li>
+<li class="missed"><code>        tracks_with_tag = tagged.count()</code></li>
+<li class="missed"><code>        if tracks_with_tag == 0:</code></li>
+<li class="missed"><code>            tag_object.delete()</code></li>
+<li class="missed"><code>        if tracks_with_tag &lt; 20:</code></li>
+<li class="missed"><code>            err = ''.join(['There is not enough data to create a quiz. ',</code></li>
+<li class="ignored"><code>                                'Please choose a more popular tag.'])</code></li>
+<li class="missed"><code>            new_game.delete()</code></li>
+<li class="missed"><code>            return render_to_response('quiz/index.html', {</code></li>
+<li class="ignored"><code>                'error_msg' : err,</code></li>
+<li class="ignored"><code>                'current_game' : None,</code></li>
+<li class="ignored"><code>            })</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="missed"><code>            new_game.tags = '"%s"' % tag</code></li>
+<li class="ignored"><code></code></li>
+<li class="missed"><code>    request.session['game'] = new_game</code></li>
 <li class="missed"><code>    question_url = reverse('musicquiz.quiz.views.question')</code></li>
 <li class="missed"><code>    return HttpResponseRedirect(question_url)</code></li>
 <li class="ignored"><code></code></li>
@@ -265,7 +294,7 @@
 <li class="missed"><code>        return HttpResponseRedirect(game_history_url)</code></li>
 <li class="ignored"><code></code></li>
 <li class="missed"><code>    next_question = game.next_question()</code></li>
-<li class="missed"><code>    possible_answers = next_question.get_choices()</code></li>
+<li class="missed"><code>    possible_answers = next_question.create_choices()</code></li>
 <li class="missed"><code>    choices = [(item.pk, unicode(item)) for item in possible_answers]</code></li>
 <li class="missed"><code>    return render_to_response('quiz/question.html', {</code></li>
 <li class="ignored"><code>        'choices' : choices,</code></li>

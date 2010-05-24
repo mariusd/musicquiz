@@ -127,17 +127,17 @@
 <div id="content-header">
   <h1>
     <span id="module-name">musicquiz.quiz.models</span>:
-    158 total statements,
-    <span class="normal">97.2% covered</span>
+    198 total statements,
+    <span class="normal">98.3% covered</span>
   </h1>
-  <p>Generated: Mon 2010-05-10 17:51 FLE Daylight Time</p>
+  <p>Generated: Tue 2010-05-25 01:41 FLE Daylight Time</p>
   <p>Source file: c:\documents and settings\marius\desktop\musicquiz\src\musicquiz\quiz\models.py</p>
   <p>
     Stats:
-    <span class="executed">137 executed</span>,
-    <span class="missed">4 missed</span>,
-    <span class="excluded">17 excluded</span>,
-    <span class="ignored">137 ignored</span> 
+    <span class="executed">174 executed</span>,
+    <span class="missed">3 missed</span>,
+    <span class="excluded">21 excluded</span>,
+    <span class="ignored">171 ignored</span> 
   </p> 
 </div>
 
@@ -147,13 +147,17 @@
 <li class="excluded"><code>from django.db import IntegrityError</code></li>
 <li class="excluded"><code>from django.conf import settings</code></li>
 <li class="excluded"><code>from utility import extract_youtube_code</code></li>
+<li class="excluded"><code>from tagging.models import TaggedItem</code></li>
 <li class="excluded"><code>import gdata.youtube</code></li>
 <li class="excluded"><code>import gdata.youtube.service</code></li>
 <li class="excluded"><code>import pylast</code></li>
 <li class="excluded"><code>import random</code></li>
 <li class="excluded"><code>import urllib</code></li>
+<li class="excluded"><code>import tagging</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>EPSILON = 1e-9</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>class Error(Exception):</code></li>
 <li class="ignored"><code>    """Base class for exceptions in this module."""</code></li>
@@ -171,6 +175,9 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    def __str__(self):</code></li>
 <li class="executed"><code>        return repr(self.value)</code></li>
+<li class="ignored"><code></code></li>
+<li class="excluded"><code>    def __unicode__(self):</code></li>
+<li class="excluded"><code>        return repr(self.value)</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code># Create your models here.</code></li>
@@ -204,7 +211,7 @@
 <li class="executed"><code>    youtube_duration = models.IntegerField(null=True, blank=True)</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    @staticmethod</code></li>
-<li class="executed"><code>    def pick_random(exclude=[]):</code></li>
+<li class="executed"><code>    def pick_random(exclude=[], tag=None):</code></li>
 <li class="ignored"><code>        """Pick a random track which is not in the exclude list.</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code>        Returned track is guaranteed to have youtube code and duration.</code></li>
@@ -212,7 +219,12 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        exclude_pks = [track.pk for track in exclude]</code></li>
 <li class="executed"><code>        try:</code></li>
-<li class="executed"><code>            track = random.choice(Track.objects.exclude(pk__in=exclude_pks))</code></li>
+<li class="executed"><code>            if not tag:</code></li>
+<li class="executed"><code>                track_objects = Track.objects</code></li>
+<li class="ignored"><code>            else:</code></li>
+<li class="executed"><code>                tagged_obj = TaggedItem.objects</code></li>
+<li class="executed"><code>                track_objects = tagged_obj.get_by_model(Track, tag)</code></li>
+<li class="executed"><code>            track = random.choice(track_objects.exclude(pk__in=exclude_pks))</code></li>
 <li class="executed"><code>        except IndexError, e:</code></li>
 <li class="executed"><code>            raise ValueError('could not pick any track')</code></li>
 <li class="ignored"><code>        else:</code></li>
@@ -221,7 +233,7 @@
 <li class="executed"><code>            if track.has_youtube_info():</code></li>
 <li class="executed"><code>                return track</code></li>
 <li class="ignored"><code>            else:</code></li>
-<li class="missed"><code>                return Track.pick_random(exclude=exclude + [track])</code></li>
+<li class="executed"><code>                return Track.pick_random(exclude=exclude + [track], tag=tag)</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    def has_youtube_info(self):</code></li>
 <li class="ignored"><code>        """Check if track has all required info about its youtube video."""</code></li>
@@ -245,31 +257,64 @@
 <li class="executed"><code>                self.youtube_duration = entry.media.duration.seconds</code></li>
 <li class="executed"><code>                self.save()</code></li>
 <li class="ignored"><code></code></li>
+<li class="executed"><code>    @staticmethod</code></li>
+<li class="ignored"><code>    def _save_lastfm_result(pylast_track_result):</code></li>
+<li class="ignored"><code>        """Save the result from pylast query to database.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        Returns the list of tuples (track, flag), where flag tells</code></li>
+<li class="ignored"><code>        whether the track was created or was it already in the database.</code></li>
+<li class="ignored"><code>        """</code></li>
+<li class="executed"><code>        result = []</code></li>
+<li class="executed"><code>        for pylast_track in pylast_track_result:</code></li>
+<li class="executed"><code>            artist_name = pylast_track.item.artist.name</code></li>
+<li class="executed"><code>            title = pylast_track.item.title</code></li>
+<li class="executed"><code>            artist, _ = Artist.objects.get_or_create(name=artist_name)</code></li>
+<li class="executed"><code>            res = Track.objects.get_or_create(artist=artist, title=title)</code></li>
+<li class="executed"><code>            result.append(res)</code></li>
+<li class="executed"><code>        return result</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>    def fetch_similar(self, limit=None):</code></li>
-<li class="ignored"><code>        """Fetch a list or similar tracks and save them in the database.</code></li>
+<li class="ignored"><code>        """Fetch a list of similar tracks and save them in the database.</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code>        Returns the count of newly added tracks.</code></li>
 <li class="ignored"><code>        """</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        if limit is not None and limit &lt; 0:</code></li>
 <li class="executed"><code>            raise ValueError('limit must be a positive integer')</code></li>
-<li class="executed"><code>        network = pylast.get_lastfm_network(api_key=settings.LASTFM_API_KEY)</code></li>
+<li class="ignored"><code>        global network</code></li>
 <li class="executed"><code>        lastfm_track = network.get_track(unicode(self.artist), self.title)</code></li>
 <li class="executed"><code>        similar = lastfm_track.get_similar()</code></li>
-<li class="executed"><code>        new_songs = 0</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>        if limit is not None:</code></li>
 <li class="executed"><code>            similar = similar[:limit]</code></li>
-<li class="executed"><code>        for similar_track in similar:</code></li>
-<li class="executed"><code>            artist_name = similar_track.item.artist.name</code></li>
-<li class="executed"><code>            title = similar_track.item.title</code></li>
-<li class="executed"><code>            artist, _ = Artist.objects.get_or_create(name=artist_name)</code></li>
-<li class="executed"><code>            result = Track.objects.get_or_create(artist=artist, title=title)</code></li>
-<li class="executed"><code>            if result[1]:</code></li>
-<li class="executed"><code>                new_songs += 1</code></li>
-<li class="executed"><code>        return new_songs</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        new_tracks = Track._save_lastfm_result(similar)</code></li>
+<li class="executed"><code>        return sum(1 for (track, flag) in new_tracks if flag)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>    @staticmethod</code></li>
+<li class="ignored"><code>    def fetch_top_tracks(tag):</code></li>
+<li class="ignored"><code>        """Get most popular tracks tagged with a specified tag.</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        Returns the count of newly added tracks.</code></li>
+<li class="ignored"><code>        """</code></li>
+<li class="ignored"><code></code></li>
+<li class="ignored"><code>        global network</code></li>
+<li class="executed"><code>        lastfm_tag = network.get_tag('%s' % tag)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        try:</code></li>
+<li class="executed"><code>            top_tracks = lastfm_tag.get_top_tracks()</code></li>
+<li class="executed"><code>        except pylast.WSError, e:</code></li>
+<li class="executed"><code>            top_tracks = []</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        new_tracks = Track._save_lastfm_result(top_tracks)</code></li>
+<li class="executed"><code>        for track, flag in new_tracks:</code></li>
+<li class="executed"><code>            tagging.models.Tag.objects.add_tag(track, '"%s"' % tag)</code></li>
+<li class="executed"><code>        return sum(1 for (track, flag) in new_tracks if flag)</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>    def __unicode__(self):</code></li>
 <li class="excluded"><code>        return u'%s \u2013 %s' % (self.artist, self.title)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>tagging.register(Track)</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>class Question(models.Model):</code></li>
@@ -346,7 +391,7 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        return self.state == 'TIMEOUT'</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>    def get_choices(self, count=8):</code></li>
+<li class="executed"><code>    def create_choices(self, count=8):</code></li>
 <li class="ignored"><code>        """Return a list of randomly selected possible answers.</code></li>
 <li class="ignored"><code></code></li>
 <li class="ignored"><code>        Correct answer is always one of the possible choices, but</code></li>
@@ -356,8 +401,25 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        if count &lt; 1:</code></li>
 <li class="executed"><code>            raise ValueError('there must be at least one answer')</code></li>
-<li class="executed"><code>        query = Track.objects.exclude(pk__in=[self.correct_answer.pk])</code></li>
-<li class="executed"><code>        choices = random.sample(query, count - 1) + [self.correct_answer]</code></li>
+<li class="executed"><code>        if not self.game.tags:</code></li>
+<li class="executed"><code>            tracks_with_tag = 0</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="executed"><code>            tracks_with_tag = (count + 1) / 2</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        choices = [self.correct_answer]</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if tracks_with_tag:</code></li>
+<li class="executed"><code>            tagged_obj = TaggedItem.objects</code></li>
+<li class="executed"><code>            tag = self.game.tags[0]</code></li>
+<li class="executed"><code>            track_objects = TaggedItem.objects.get_by_model(Track, tag)</code></li>
+<li class="executed"><code>            query = track_objects.exclude(pk__in=[self.correct_answer.pk])</code></li>
+<li class="executed"><code>            choices += random.sample(query, tracks_with_tag)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if count - tracks_with_tag - 1 &gt; 0:</code></li>
+<li class="executed"><code>            exclude_list = [t.pk for t in choices]</code></li>
+<li class="executed"><code>            query = Track.objects.exclude(pk__in=exclude_list)</code></li>
+<li class="executed"><code>            choices += random.sample(query, count - tracks_with_tag - 1)</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>        random.shuffle(choices)</code></li>
 <li class="executed"><code>        return choices</code></li>
 <li class="ignored"><code></code></li>
@@ -376,8 +438,16 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        if self.is_game_finished():</code></li>
 <li class="executed"><code>            raise QuizModelError('game is already over')</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>        if self.questions.count() == self.quiz_length:</code></li>
+<li class="executed"><code>            raise QuizModelError('there are no more questions left')</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>        seen_tracks = [q.correct_answer for q in self.questions.all()]</code></li>
-<li class="executed"><code>        answer = Track.pick_random(exclude=seen_tracks)</code></li>
+<li class="executed"><code>        if not self.tags:</code></li>
+<li class="executed"><code>            answer = Track.pick_random(exclude=seen_tracks)</code></li>
+<li class="ignored"><code>        else:</code></li>
+<li class="executed"><code>            tag = self.tags[0]</code></li>
+<li class="executed"><code>            answer = Track.pick_random(exclude=seen_tracks, tag=tag)</code></li>
 <li class="executed"><code>        number = self.questions.count() + 1</code></li>
 <li class="executed"><code>        question = Question.objects.create(game=self,</code></li>
 <li class="ignored"><code>                        correct_answer=answer, number=number)</code></li>
@@ -419,6 +489,9 @@
 <li class="ignored"><code></code></li>
 <li class="executed"><code>        if not self.has_started():</code></li>
 <li class="executed"><code>            raise QuizModelError('game has not started')</code></li>
+<li class="executed"><code>        if self.is_game_finished():</code></li>
+<li class="executed"><code>            raise QuizModelError('game is already over')</code></li>
+<li class="ignored"><code></code></li>
 <li class="executed"><code>        return self.questions.order_by('-number')[0]</code></li>
 <li class="ignored"><code></code></li>
 <li class="executed"><code>    def remaining_questions(self):</code></li>
@@ -429,15 +502,16 @@
 <li class="executed"><code>    def is_game_finished(self):</code></li>
 <li class="ignored"><code>        """Check if the game has already finished."""</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>        if not self.questions.count():</code></li>
+<li class="executed"><code>        if self.questions.count() != self.quiz_length:</code></li>
 <li class="executed"><code>            return False</code></li>
 <li class="ignored"><code></code></li>
-<li class="executed"><code>        last_question_answered = self.current_question().is_answered()</code></li>
-<li class="executed"><code>        all_questions_shown = self.questions.count() == self.quiz_length</code></li>
-<li class="executed"><code>        return all_questions_shown and last_question_answered</code></li>
+<li class="executed"><code>        last_question = self.questions.get(number=self.quiz_length)</code></li>
+<li class="executed"><code>        return last_question.is_answered()</code></li>
 <li class="ignored"><code></code></li>
 <li class="excluded"><code>    def __unicode__(self):</code></li>
 <li class="excluded"><code>        return u'#%d' % (self.id)</code></li>
+<li class="ignored"><code></code></li>
+<li class="executed"><code>tagging.register(Game)</code></li>
   </ol>
 </div>
 

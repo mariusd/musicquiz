@@ -54,11 +54,9 @@
             ({{ current_game.remaining_questions }} unanswered questions).
             <a href="{% url musicquiz.quiz.views.question %}">Continue</a></p>
         {% endif %}
+        {% if error_msg %}<p class="error">{{ error_msg }}</p>{% endif %}
         <h2 class="title">new game</h2>
         <div class="entry">
-            
-            {% if error_msg %}<p class="error">{{ error_msg }}</p>{% endif %}
-            
             <form method="post" action="{% url musicquiz.quiz.views.index %}"
                   onsubmit="javascript:startLoading()">
                 <p>To start a new game, enter a quiz theme

@@ -4,7 +4,7 @@ setup(
     name = "musicquiz",
     version = "0.0",
     url = 'http://github.com/mariusd/musicquiz',
-    license = '',
+    license = 'BSD',
     description = "",
     author = 'Marius Damarackas',
     packages = find_packages('src'),
