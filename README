@@ -1,0 +1,14 @@
+==========
+Music quiz
+==========
+
+This is a small Django application for playing musical quizzes.
+Website plays a song and visitor must guess what it is. This application
+uses embedded (and hidden) youtube.com videos as a source for music and 
+last.fm to discover titles of the songs.
+
+Most of the quiz rules like timing are implemented only on client side 
+with Javascript. Also visitor can easily find the correct answer by 
+looking at the HTML source code, but this game is still fun to play.
+
+I have not tested this website on anything but Firefox 3.6.
